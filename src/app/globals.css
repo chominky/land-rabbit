@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0b0d11;
+  --bg-secondary: #12151c;
+  --bg-card: #181c25;
+  --border: #2a2e38;
+  --text-primary: #e8e6e3;
+  --text-secondary: #8b8d93;
+  --text-muted: #5a5c63;
+  --amber: #c8a24e;
+  --amber-dim: #8b7235;
+  --verdict-yes: #3a7d44;
+  --verdict-no: #8b3a3a;
+  --verdict-maybe: #8b7a3a;
+  --verdict-irrelevant: #4a4c53;
+  --verdict-invalid: #4a4c53;
+  --danger: #c0392b;
+  --background: #0b0d11;
+  --foreground: #e8e6e3;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Verdict badges */
+.verdict-yes { background: var(--verdict-yes); }
+.verdict-no { background: var(--verdict-no); }
+.verdict-maybe { background: var(--verdict-maybe); }
+.verdict-irrelevant { background: var(--verdict-irrelevant); }
+.verdict-invalid { background: var(--verdict-invalid); }
+
+/* Locked image slot */
+.locked-slot {
+  background: repeating-conic-gradient(
+    var(--bg-card) 0% 25%, var(--bg-secondary) 0% 50%
+  ) 50% / 20px 20px;
+  filter: blur(2px);
+}
+
+/* Token warning */
+.tokens-warning {
+  color: var(--danger);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Stamp effect */
+.stamp {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Menu keyboard nav */
+.menu-item-active {
+  border-left: 3px solid var(--amber);
+  background: rgba(200, 162, 78, 0.08);
+}
