@@ -29,7 +29,6 @@ async function seed() {
       id: caseData.id,
       title: caseData.title,
       difficulty: caseData.difficulty,
-      tags: caseData.tags,
       status: caseData.status || 'draft',
       brief: caseData.brief,
       truth: caseData.truth,

@@ -287,12 +287,12 @@ export default function RoomCreatePage() {
 
               {mode === 'coop' && (
                 <p className="mt-2 text-[11px] leading-relaxed" style={{ color: DIM }}>
-                  모든 플레이어가 공유 토큰으로 함께 질문합니다. 채팅으로 소통하며 협력하세요.
+                  모든 플레이어가 공유 질문 수로 함께 질문합니다. 채팅으로 소통하며 협력하세요.
                 </p>
               )}
               {mode === 'versus' && (
                 <p className="mt-2 text-[11px] leading-relaxed" style={{ color: DIM }}>
-                  순서대로 60초 안에 질문을 던집니다. 개인 토큰 관리와 빠른 판단이 관건입니다.
+                  각자 자유롭게 질문하며 동시에 추리합니다. 질문 수 관리와 빠른 판단이 관건입니다.
                 </p>
               )}
             </div>

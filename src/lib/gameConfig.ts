@@ -42,7 +42,6 @@ export const MAX_IMAGES = 4;
 export const MAX_PLAYERS = 8;
 export const MAX_FINAL_ATTEMPTS = 2;
 export const VOTE_TIMEOUT_SECONDS = 20;
-export const TURN_TIMEOUT_SECONDS = 60;
 export const WRONG_ANSWER_COOLDOWN_TURNS = 2;
 export const WRONG_ANSWER_COOLDOWN_SECONDS = 60;
 

@@ -37,7 +37,7 @@ export async function POST(
       p_cost: COST_HINT,
     });
     if (result === -1) {
-      return NextResponse.json({ error: '토큰이 부족합니다.' }, { status: 400 });
+      return NextResponse.json({ error: '질문이 부족합니다.' }, { status: 400 });
     }
   } else {
     const { data: result } = await supabase.rpc('deduct_player_tokens', {
@@ -45,7 +45,7 @@ export async function POST(
       p_cost: COST_HINT,
     });
     if (result === -1) {
-      return NextResponse.json({ error: '토큰이 부족합니다.' }, { status: 400 });
+      return NextResponse.json({ error: '질문이 부족합니다.' }, { status: 400 });
     }
   }
 

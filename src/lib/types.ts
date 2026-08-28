@@ -19,7 +19,6 @@ export type CaseData = {
   id: string;
   title: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
-  tags: string[];
   status: 'draft' | 'published';
   images: string[];
   imageMeta: ImageMeta[];
@@ -35,7 +34,6 @@ export type CasePublicDTO = {
   id: string;
   title: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
-  tags: string[];
   brief: string;
   keyFactLabels: { id: string; label: string; required: boolean }[];
   imageCount: number;

@@ -67,7 +67,6 @@ export async function POST(request: NextRequest) {
       id: c.id,
       title: c.title,
       difficulty: c.difficulty,
-      tags: c.tags,
       brief: c.brief,
       truth: c.truth,
       images: c.images,

@@ -47,7 +47,6 @@ export async function GET(
         id: fileCase.id,
         title: fileCase.title,
         difficulty: fileCase.difficulty,
-        tags: fileCase.tags,
         brief: fileCase.brief,
         images: fileCase.images,
         keyFactLabels: fileCase.keyFacts.map(
@@ -59,7 +58,7 @@ export async function GET(
   } else {
     const { data: caseData } = await supabase
       .from('cases')
-      .select('id, title, difficulty, tags, brief, key_facts, images')
+      .select('id, title, difficulty, brief, key_facts, images')
       .eq('id', room.case_id)
       .single();
 
@@ -68,7 +67,6 @@ export async function GET(
         id: caseData.id,
         title: caseData.title,
         difficulty: caseData.difficulty,
-        tags: caseData.tags,
         brief: caseData.brief,
         images: caseData.images as string[],
         keyFactLabels: (caseData.key_facts as Array<{ id: string; label: string; required: boolean }>).map(
@@ -85,12 +83,19 @@ export async function GET(
     (q.revealed_facts || []).forEach((f: string) => revealedKeyFacts.add(f));
   });
 
+  const { data: events } = await supabase
+    .from('room_events')
+    .select('id, room_id, type, payload, created_at')
+    .eq('room_id', room.id)
+    .order('created_at');
+
   return NextResponse.json({
     room,
     players: players || [],
     questions: enrichedQuestions,
     casePublic,
     revealedKeyFacts: Array.from(revealedKeyFacts),
+    events: events || [],
   });
 }
 
@@ -127,21 +132,6 @@ export async function PATCH(
       status: 'playing',
       last_activity_at: new Date().toISOString(),
     };
-
-    // For versus mode, set first player's turn
-    if (room.mode === 'versus') {
-      const { data: players } = await supabase
-        .from('room_players')
-        .select('id')
-        .eq('room_id', room.id)
-        .eq('is_spectator', false)
-        .order('joined_at');
-
-      if (players && players.length > 0) {
-        updates.turn_player_id = players[0].id;
-        updates.turn_deadline = new Date(Date.now() + 60_000).toISOString();
-      }
-    }
 
     await supabase.from('rooms').update(updates).eq('id', room.id);
 

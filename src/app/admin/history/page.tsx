@@ -134,7 +134,7 @@ export default function AdminHistoryPage() {
                     {/* Stats */}
                     <div style={{ display: 'flex', gap: 16, padding: '12px 0', fontSize: 12, color: '#8b8d93' }}>
                       <span>정확도: {r.accuracy ?? '-'}%</span>
-                      <span>남은 토큰: {r.tokensLeft}</span>
+                      <span>남은 질문: {r.tokensLeft}</span>
                       <span>질문 수: {r.totalQuestions}</span>
                     </div>
 

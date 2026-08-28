@@ -112,7 +112,7 @@ async function handleSinglePlayer(
   const currentTokens = (body.tokens as number) ?? INITIAL_TOKENS;
   if (currentTokens < COST_QUESTION) {
     return NextResponse.json(
-      { error: '토큰이 소진되었습니다.' },
+      { error: '질문이 소진되었습니다.' },
       { status: 400 }
     );
   }
@@ -255,14 +255,6 @@ async function handleMultiplayer(
     );
   }
 
-  // Versus mode: turn check
-  if (room.mode === 'versus' && room.turn_player_id !== playerId) {
-    return NextResponse.json(
-      { error: '현재 당신의 턴이 아닙니다.' },
-      { status: 403 }
-    );
-  }
-
   // Check duplicate in room questions
   const { data: prevQuestions } = await supabase
     .from('room_questions')
@@ -291,7 +283,7 @@ async function handleMultiplayer(
     });
     if (result === -1) {
       return NextResponse.json(
-        { error: '토큰이 소진되었습니다.' },
+        { error: '질문이 소진되었습니다.' },
         { status: 400 }
       );
     }
@@ -303,7 +295,7 @@ async function handleMultiplayer(
     });
     if (result === -1) {
       return NextResponse.json(
-        { error: '토큰이 소진되었습니다.' },
+        { error: '질문이 소진되었습니다.' },
         { status: 400 }
       );
     }
@@ -414,30 +406,6 @@ async function handleMultiplayer(
         trigger: 'auto',
       },
     });
-  }
-
-  // Advance turn in versus mode
-  if (room.mode === 'versus') {
-    const { data: players } = await supabase
-      .from('room_players')
-      .select('id')
-      .eq('room_id', room.id)
-      .eq('is_spectator', false)
-      .order('joined_at');
-
-    if (players && players.length > 0) {
-      const currentIdx = players.findIndex((p: { id: string }) => p.id === playerId);
-      const nextIdx = (currentIdx + 1) % players.length;
-      await supabase
-        .from('rooms')
-        .update({
-          turn_player_id: players[nextIdx].id,
-          turn_deadline: new Date(
-            Date.now() + 60_000
-          ).toISOString(),
-        })
-        .eq('id', room.id);
-    }
   }
 
   return NextResponse.json({

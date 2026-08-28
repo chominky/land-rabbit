@@ -365,7 +365,7 @@ export default function PlayPage() {
 
           {/* Tokens */}
           <div className="mb-4 p-3 rounded-lg border text-center" style={{ borderColor: '#2a2e38', background: '#181c25' }}>
-            <div className="text-xs mb-1" style={{ color: '#8b8d93' }}>남은 토큰</div>
+            <div className="text-xs mb-1" style={{ color: '#8b8d93' }}>남은 질문</div>
             <div className={`text-3xl font-bold ${isTokensLow ? 'tokens-warning' : ''}`} style={{ color: isTokensLow ? '#c0392b' : '#c8a24e' }}>
               {state.tokens}
             </div>
@@ -525,7 +525,7 @@ export default function PlayPage() {
             <div className="p-4 border-t" style={{ borderColor: '#2a2e38', background: '#12151c' }}>
               <div className="text-center">
                 <AlertTriangle size={24} className="mx-auto mb-2" style={{ color: '#c0392b' }} />
-                <p className="text-sm mb-2" style={{ color: '#c0392b' }}>토큰이 소진되었습니다</p>
+                <p className="text-sm mb-2" style={{ color: '#c0392b' }}>질문이 소진되었습니다</p>
                 <button
                   onClick={() => setShowFinalModal(true)}
                   className="px-4 py-2 rounded font-bold text-sm"
@@ -560,7 +560,7 @@ export default function PlayPage() {
               </div>
               <div className="flex justify-between mt-1 text-[10px]" style={{ color: '#5a5c63' }}>
                 <span>{question.length}/{MAX_QUESTION_LENGTH}</span>
-                <span>-1 토큰 (INVALID는 무료)</span>
+                <span>-1Q (INVALID는 무료)</span>
               </div>
             </div>
           )}
@@ -579,7 +579,7 @@ export default function PlayPage() {
             </div>
             <div className="mb-3 p-2 rounded text-xs" style={{ background: '#8b3a3a22', color: '#c0392b', border: '1px solid #8b3a3a44' }}>
               <AlertTriangle size={12} className="inline mr-1" />
-              오답 시 {COST_WRONG_ANSWER}토큰이 차감됩니다
+              오답 시 질문 {COST_WRONG_ANSWER}개가 차감됩니다
             </div>
             <textarea
               value={finalAnswer}
@@ -660,7 +660,7 @@ export default function PlayPage() {
             <div className="text-center space-y-3">
               <button
                 onClick={() => {
-                  const text = `육지토끼고기 · ${caseInfo.title} · 남은토큰 ${state.tokens} · ${state.rank || 'D'}랭크`;
+                  const text = `육지토끼고기 · ${caseInfo.title} · 남은질문 ${state.tokens} · ${state.rank || 'D'}랭크`;
                   navigator.clipboard.writeText(text);
                   alert('복사되었습니다!');
                 }}

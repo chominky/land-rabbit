@@ -7,15 +7,15 @@ import { useRouter, useParams } from 'next/navigation';
 import {
   Copy, Check, Eye, EyeOff, Users, Crown, Send, Flag, Lightbulb,
   FileText, Lock, Trophy, AlertTriangle, ChevronLeft, X, Loader2,
-  Clock, ArrowRight, MessageSquare, Unlock,
+  ArrowRight, MessageSquare, Unlock,
 } from 'lucide-react';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import {
   COST_HINT, COST_PREVIEW, COST_WRONG_ANSWER, MAX_QUESTION_LENGTH,
-  MAX_FINAL_ATTEMPTS, TURN_TIMEOUT_SECONDS, calculateScore, getRank,
+  MAX_FINAL_ATTEMPTS, calculateScore, getRank,
 } from '@/lib/gameConfig';
 import {
-  Room, RoomPlayer, RoomQuestion, CasePublicDTO, Verdict,
+  Room, RoomPlayer, RoomQuestion, RoomEvent, CasePublicDTO, Verdict,
 } from '@/lib/types';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
@@ -57,6 +57,7 @@ type RoomStateResponse = {
   questions: RoomQuestion[];
   casePublic: CasePublicDTO | null;
   revealedKeyFacts: string[];
+  events: RoomEvent[];
 };
 
 type ChatLine = { id: string; nickname: string; text: string; ts: number };
@@ -96,7 +97,7 @@ function PlayerRow({ p, isMe, isHost, isTurn }: {
       {p.solved_at && <Trophy size={12} style={{ color: AMBER }} />}
       {!p.is_spectator && (
         <span className="text-xs font-mono" style={{ color: DIM }}>
-          {p.tokens}T
+          {p.tokens}Q
         </span>
       )}
     </div>
@@ -149,8 +150,8 @@ export default function RoomPage() {
   // Copy feedback
   const [copied, setCopied] = useState(false);
 
-  // Countdown
-  const [secondsLeft, setSecondsLeft] = useState<number | null>(null);
+  // Spectating (versus mode)
+  const [spectatingId, setSpectatingId] = useState<string | null>(null);
 
   // Mobile tab: 'info' (left panel) vs 'questions' (right panel)
   const [mobileTab, setMobileTab] = useState<'questions' | 'info'>('info');
@@ -250,25 +251,6 @@ export default function RoomPage() {
     }
     prevChatLen.current = chatLines.length;
   }, [chatLines.length, mobileTab]);
-
-  // ── Turn countdown ─────────────────────────────────────────────────────────
-  useEffect(() => {
-    const room = roomData?.room;
-    if (!room || room.status !== 'playing' || room.mode !== 'versus') {
-      setSecondsLeft(null);
-      return;
-    }
-    const deadline = (room as Room & { turn_deadline?: string }).turn_deadline;
-    if (!deadline) { setSecondsLeft(null); return; }
-
-    function tick() {
-      const diff = Math.max(0, Math.ceil((new Date(deadline!).getTime() - Date.now()) / 1000));
-      setSecondsLeft(diff);
-    }
-    tick();
-    const iv = setInterval(tick, 500);
-    return () => clearInterval(iv);
-  }, [roomData?.room]);
 
   // ── Join room ──────────────────────────────────────────────────────────────
   async function handleJoin(e: React.FormEvent) {
@@ -463,18 +445,52 @@ export default function RoomPage() {
 
   const me = identity ? players.find((p) => p.id === identity.playerId) : null;
   const isHost = room ? room.host_player_id === identity?.playerId : false;
-  const isMyTurn = room?.mode === 'versus' && room.turn_player_id === identity?.playerId;
   const isCoop = room?.mode === 'coop';
-  const canAsk =
-    room?.status === 'playing' &&
-    !me?.is_spectator &&
-    (isCoop || isMyTurn) &&
-    (me?.tokens ?? 0) > 0 &&
-    !asking;
+  const isVersus = room?.mode === 'versus';
   const myPlayer = me;
   const tokens = isCoop ? (room?.shared_tokens ?? 0) : (myPlayer?.tokens ?? 0);
   const attemptsUsed = myPlayer?.attempts_used ?? 0;
   const isMeSolved = !!myPlayer?.solved_at;
+  const isMeFinished = isMeSolved || attemptsUsed >= MAX_FINAL_ATTEMPTS || (isVersus && tokens <= 0);
+
+  const canAsk =
+    room?.status === 'playing' &&
+    !me?.is_spectator &&
+    !isMeSolved &&
+    (me?.tokens ?? 0) > 0 &&
+    !asking;
+
+  // Versus mode: per-player question filtering + spectating
+  const targetPlayerId = isVersus ? (spectatingId || identity?.playerId) : null;
+  const displayQuestions = targetPlayerId
+    ? questions.filter((q) => q.player_id === targetPlayerId)
+    : questions;
+
+  const displayRevealedFacts = isVersus
+    ? (() => {
+        const facts = new Set<string>();
+        displayQuestions.forEach((q) => (q.revealed_facts || []).forEach((f) => facts.add(f)));
+        return Array.from(facts);
+      })()
+    : revealedKeyFacts;
+
+  const displayTokens = isVersus && spectatingId
+    ? (players.find((p) => p.id === spectatingId)?.tokens ?? 0)
+    : tokens;
+
+  const spectatedPlayer = spectatingId ? players.find((p) => p.id === spectatingId) : null;
+
+  const otherPlayers = isVersus
+    ? players.filter((p) => !p.is_spectator && p.id !== identity?.playerId)
+    : [];
+
+  const events = roomData?.events ?? [];
+  const verdictEvents = isVersus && spectatingId
+    ? events.filter((e) =>
+        (e.type === 'player_solved' || e.type === 'wrong_answer') &&
+        (e.payload as { playerId?: string }).playerId === spectatingId
+      )
+    : [];
 
   // ── Loading / error / no-identity screens ─────────────────────────────────
   if (loading) {
@@ -665,11 +681,8 @@ export default function RoomPage() {
   if (room?.status === 'playing') {
     const revealedCount = room.revealed_image_count ?? 1;
     const totalImages = casePublic?.imageCount ?? 1;
-    const canPreview = tokens >= COST_PREVIEW && revealedCount < totalImages && !previewLoading;
-    const canHint = tokens >= COST_HINT && hints.length < 3 && !hintLoading;
-    const turnPlayer = room.mode === 'versus'
-      ? players.find((p) => p.id === room.turn_player_id)
-      : null;
+    const canPreview = displayTokens >= COST_PREVIEW && revealedCount < totalImages && !previewLoading && !spectatingId;
+    const canHint = displayTokens >= COST_HINT && hints.length < 3 && !hintLoading && !spectatingId;
 
     return (
       <div className="h-screen flex flex-col" style={{ background: BG }}>
@@ -697,30 +710,18 @@ export default function RoomPage() {
           </div>
           <div className="flex items-center gap-2">
             {/* Versus turn info */}
-            {room.mode === 'versus' && (
-              <div className="flex items-center gap-1.5">
-                {secondsLeft !== null && (
-                  <span
-                    className="text-xs font-mono flex items-center gap-1"
-                    style={{ color: secondsLeft <= 10 ? DANGER : MUTED }}
-                  >
-                    <Clock size={12} />
-                    {secondsLeft}s
-                  </span>
-                )}
-                {turnPlayer && (
-                  <span className="text-xs" style={{ color: isMyTurn ? AMBER : MUTED }}>
-                    {isMyTurn ? '내 차례' : `${turnPlayer.nickname}의 차례`}
-                  </span>
-                )}
-              </div>
+            {isVersus && spectatedPlayer && (
+              <span className="text-xs flex items-center gap-1" style={{ color: AMBER }}>
+                <Eye size={12} />
+                {spectatedPlayer.nickname} 관전 중
+              </span>
             )}
             {/* Token display */}
             <div
               className="text-xs font-bold px-2 py-1 rounded"
-              style={{ background: CARD2, color: tokens <= 10 ? DANGER : AMBER }}
+              style={{ background: CARD2, color: displayTokens <= 10 ? DANGER : AMBER }}
             >
-              {tokens}T
+              {displayTokens}Q
             </div>
           </div>
         </header>
@@ -823,17 +824,17 @@ export default function RoomPage() {
                 style={{ background: CARD2, borderColor: BORDER }}
               >
                 <p className="text-[10px] mb-1" style={{ color: MUTED }}>
-                  {isCoop ? '공유 토큰' : '내 토큰'}
+                  {spectatingId ? `${spectatedPlayer?.nickname}의 남은 질문` : isCoop ? '공유 질문' : '남은 질문'}
                 </p>
                 <p
                   className="text-3xl font-bold"
-                  style={{ color: tokens <= 10 ? DANGER : AMBER }}
+                  style={{ color: displayTokens <= 10 ? DANGER : AMBER }}
                 >
-                  {tokens}
+                  {displayTokens}
                 </p>
-                {tokens > 0 && (
+                {displayTokens > 0 && (
                   <p className="text-[10px] mt-1" style={{ color: DIM }}>
-                    예상 점수 {calculateScore(tokens, 50)} / 등급 {getRank(calculateScore(tokens, 50))}
+                    예상 점수 {calculateScore(displayTokens, 50)} / 등급 {getRank(calculateScore(displayTokens, 50))}
                   </p>
                 )}
               </div>
@@ -850,7 +851,7 @@ export default function RoomPage() {
                     ? <Loader2 size={12} className="animate-spin" />
                     : <Lightbulb size={12} />
                   }
-                  텍스트 힌트 -{COST_HINT}T ({hints.length}/3)
+                  텍스트 힌트 -{COST_HINT}Q ({hints.length}/3)
                 </button>
                 <button
                   onClick={buyPreview}
@@ -864,7 +865,7 @@ export default function RoomPage() {
                   }
                   {revealedCount >= totalImages
                     ? '공개할 단서 없음'
-                    : `단서 미리보기 -${COST_PREVIEW}T`}
+                    : `단서 미리보기 -${COST_PREVIEW}Q`}
                 </button>
               </div>
 
@@ -891,20 +892,20 @@ export default function RoomPage() {
                   style={{ background: CARD2, borderColor: BORDER }}
                 >
                   <p className="text-[10px] mb-2" style={{ color: MUTED }}>
-                    핵심 요소 {revealedKeyFacts.length} / {casePublic.keyFactLabels.length}
+                    핵심 요소 {displayRevealedFacts.length} / {casePublic.keyFactLabels.length}
                   </p>
                   <div className="w-full h-1.5 rounded-full mb-2" style={{ background: BORDER }}>
                     <div
                       className="h-full rounded-full transition-all"
                       style={{
                         background: AMBER,
-                        width: `${(revealedKeyFacts.length / (casePublic.keyFactLabels.length || 1)) * 100}%`,
+                        width: `${(displayRevealedFacts.length / (casePublic.keyFactLabels.length || 1)) * 100}%`,
                       }}
                     />
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {casePublic.keyFactLabels.map((f, idx) => {
-                      const found = revealedKeyFacts.includes(f.id);
+                      const found = displayRevealedFacts.includes(f.id);
                       return (
                         <span
                           key={f.id}
@@ -934,15 +935,31 @@ export default function RoomPage() {
                   참가자
                 </p>
                 <div className="space-y-1.5">
-                  {players.map((p) => (
-                    <PlayerRow
-                      key={p.id}
-                      p={p}
-                      isMe={p.id === identity.playerId}
-                      isHost={p.id === room.host_player_id}
-                      isTurn={room.mode === 'versus' && p.id === room.turn_player_id}
-                    />
-                  ))}
+                  {players.map((p) => {
+                    const canSpectatePlayer = isVersus && isMeFinished && p.id !== identity.playerId && !p.is_spectator;
+                    return (
+                      <div
+                        key={p.id}
+                        onClick={() => canSpectatePlayer && setSpectatingId(p.id === spectatingId ? null : p.id)}
+                        style={{ cursor: canSpectatePlayer ? 'pointer' : 'default' }}
+                      >
+                        <PlayerRow
+                          p={p}
+                          isMe={p.id === identity.playerId}
+                          isHost={p.id === room.host_player_id}
+                          isTurn={isVersus && spectatingId === p.id}
+                        />
+                        {canSpectatePlayer && (
+                          <div className="flex items-center gap-1 px-3 -mt-0.5 pb-1" style={{ color: DIM }}>
+                            <Eye size={9} />
+                            <span className="text-[9px]">
+                              {spectatingId === p.id ? '관전 해제' : '클릭하여 관전'}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -997,11 +1014,14 @@ export default function RoomPage() {
               style={{ background: CARD, borderColor: BORDER }}
             >
               <span className="text-xs" style={{ color: MUTED }}>
-                심문 기록 ({questions.length}건)
+                심문 기록 ({displayQuestions.length}건)
+                {spectatedPlayer && (
+                  <span className="ml-1" style={{ color: AMBER }}>· {spectatedPlayer.nickname}</span>
+                )}
               </span>
               <button
                 onClick={() => setShowFinalModal(true)}
-                disabled={isMeSolved || attemptsUsed >= MAX_FINAL_ATTEMPTS || me?.is_spectator}
+                disabled={isMeSolved || attemptsUsed >= MAX_FINAL_ATTEMPTS || me?.is_spectator || !!spectatingId}
                 className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-bold disabled:opacity-30"
                 style={{ background: AMBER, color: BG }}
               >
@@ -1012,13 +1032,45 @@ export default function RoomPage() {
 
             {/* Log */}
             <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-2">
-              {questions.length === 0 && (
+              {/* Spectating banner */}
+              {isVersus && spectatedPlayer && (
+                <div
+                  className="flex items-center justify-between px-3 py-2 rounded-lg border mb-2"
+                  style={{ background: `${AMBER}0d`, borderColor: `${AMBER}33` }}
+                >
+                  <div className="flex items-center gap-2">
+                    <Eye size={14} style={{ color: AMBER }} />
+                    <span className="text-xs font-bold" style={{ color: AMBER }}>
+                      {spectatedPlayer.nickname} 관전 중
+                    </span>
+                    <span className="text-[10px]" style={{ color: MUTED }}>
+                      남은 질문 {spectatedPlayer.tokens}Q · 시도 {spectatedPlayer.attempts_used}/{MAX_FINAL_ATTEMPTS}
+                      {spectatedPlayer.solved_at && ' · 해결!'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setSpectatingId(null)}
+                    className="text-xs px-2 py-1 rounded"
+                    style={{ color: MUTED }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
+
+              {displayQuestions.length === 0 && !spectatingId && (
                 <div className="text-center py-12" style={{ color: DIM }}>
                   <FileText size={28} className="mx-auto mb-2 opacity-30" />
                   <p className="text-sm">질문을 시작하세요</p>
                 </div>
               )}
-              {questions.map((q, i) => (
+              {displayQuestions.length === 0 && spectatingId && (
+                <div className="text-center py-12" style={{ color: DIM }}>
+                  <FileText size={28} className="mx-auto mb-2 opacity-30" />
+                  <p className="text-sm">아직 질문 기록이 없습니다</p>
+                </div>
+              )}
+              {displayQuestions.map((q, i) => (
                 <div
                   key={q.id}
                   className="rounded-lg p-3 border"
@@ -1063,6 +1115,43 @@ export default function RoomPage() {
                   </div>
                 </div>
               ))}
+
+              {/* Verdict events during spectating */}
+              {verdictEvents.map((ev) => {
+                const p = ev.payload as { solved?: boolean; accuracy?: number; answer?: string; feedback?: string };
+                return (
+                  <div
+                    key={ev.id}
+                    className="rounded-lg p-3 border"
+                    style={{
+                      background: p.solved ? `${AMBER}0d` : `${DANGER}0d`,
+                      borderColor: p.solved ? `${AMBER}44` : `${DANGER}44`,
+                    }}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      {p.solved ? (
+                        <Trophy size={14} style={{ color: AMBER }} />
+                      ) : (
+                        <AlertTriangle size={14} style={{ color: DANGER }} />
+                      )}
+                      <span className="text-xs font-bold" style={{ color: p.solved ? AMBER : DANGER }}>
+                        최종 추리 {p.solved ? '성공' : '실패'}
+                        {p.accuracy !== undefined && ` · 정확도 ${p.accuracy}%`}
+                      </span>
+                    </div>
+                    {p.answer && (
+                      <p className="text-xs leading-relaxed mb-1" style={{ color: TEXT }}>
+                        {p.answer}
+                      </p>
+                    )}
+                    {p.feedback && (
+                      <p className="text-[10px]" style={{ color: MUTED }}>
+                        {p.feedback}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* Mobile chat (above input) */}
@@ -1110,48 +1199,105 @@ export default function RoomPage() {
               className="shrink-0 p-4 border-t space-y-2"
               style={{ background: CARD, borderColor: BORDER }}
             >
-              {room.mode === 'versus' && !isMyTurn && (
-                <p className="text-xs text-center" style={{ color: DIM }}>
-                  {turnPlayer ? `${turnPlayer.nickname}의 차례입니다` : '대기 중…'}
-                  {secondsLeft !== null && ` (${secondsLeft}s)`}
-                </p>
+              {/* Versus mode: spectating selector when finished */}
+              {isVersus && isMeFinished && !spectatingId && (
+                <div className="text-center space-y-2">
+                  <p className="text-xs" style={{ color: MUTED }}>
+                    {isMeSolved ? '사건을 해결했습니다!' : '게임이 종료되었습니다'}
+                  </p>
+                  {otherPlayers.length > 0 && (
+                    <>
+                      <p className="text-[10px]" style={{ color: DIM }}>다른 플레이어를 관전할 수 있습니다</p>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {otherPlayers.map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => setSpectatingId(p.id)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs"
+                            style={{ borderColor: BORDER, color: TEXT, background: CARD2 }}
+                          >
+                            <Eye size={11} />
+                            {p.nickname}
+                            {p.solved_at && <Trophy size={10} style={{ color: AMBER }} />}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               )}
-              {askError && (
-                <p className="text-xs" style={{ color: DANGER }}>{askError}</p>
+
+              {/* Versus mode: spectating active */}
+              {isVersus && spectatingId && (
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-xs" style={{ color: MUTED }}>
+                    <Eye size={11} className="inline mr-1" />
+                    {spectatedPlayer?.nickname} 관전 중
+                  </span>
+                  <button
+                    onClick={() => setSpectatingId(null)}
+                    className="text-[10px] px-2 py-1 rounded border"
+                    style={{ borderColor: BORDER, color: DIM }}
+                  >
+                    관전 해제
+                  </button>
+                  {otherPlayers.filter((p) => p.id !== spectatingId).length > 0 && (
+                    <div className="flex gap-1">
+                      {otherPlayers.filter((p) => p.id !== spectatingId).map((p) => (
+                        <button
+                          key={p.id}
+                          onClick={() => setSpectatingId(p.id)}
+                          className="text-[10px] px-2 py-1 rounded border"
+                          style={{ borderColor: BORDER, color: MUTED }}
+                        >
+                          {p.nickname}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               )}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') submitQuestion(); }}
-                  placeholder={
-                    !canAsk
-                      ? (me?.is_spectator ? '관전자는 질문할 수 없습니다' :
-                         room.mode === 'versus' && !isMyTurn ? '내 차례가 아닙니다' : '질문 불가')
-                      : '예/아니오로 답할 수 있는 질문…'
-                  }
-                  disabled={!canAsk || asking}
-                  maxLength={MAX_QUESTION_LENGTH}
-                  className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none disabled:opacity-40"
-                  style={{ background: CARD2, borderColor: BORDER, color: TEXT }}
-                />
-                <button
-                  onClick={submitQuestion}
-                  disabled={!canAsk || asking || !question.trim()}
-                  className="px-4 py-2 rounded-lg disabled:opacity-40 flex items-center"
-                  style={{ background: AMBER, color: BG }}
-                >
-                  {asking
-                    ? <Loader2 size={16} className="animate-spin" />
-                    : <Send size={16} />
-                  }
-                </button>
-              </div>
-              <div className="flex justify-between text-[10px]" style={{ color: DIM }}>
-                <span>{question.length}/{MAX_QUESTION_LENGTH}</span>
-                <span>-1T (INVALID는 무료)</span>
-              </div>
+
+              {/* Normal question input (not spectating) */}
+              {!spectatingId && !(isVersus && isMeFinished) && (
+                <>
+                  {askError && (
+                    <p className="text-xs" style={{ color: DANGER }}>{askError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={question}
+                      onChange={(e) => setQuestion(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') submitQuestion(); }}
+                      placeholder={
+                        !canAsk
+                          ? (me?.is_spectator ? '관전자는 질문할 수 없습니다' : '질문 불가')
+                          : '예/아니오로 답할 수 있는 질문…'
+                      }
+                      disabled={!canAsk || asking}
+                      maxLength={MAX_QUESTION_LENGTH}
+                      className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none disabled:opacity-40"
+                      style={{ background: CARD2, borderColor: BORDER, color: TEXT }}
+                    />
+                    <button
+                      onClick={submitQuestion}
+                      disabled={!canAsk || asking || !question.trim()}
+                      className="px-4 py-2 rounded-lg disabled:opacity-40 flex items-center"
+                      style={{ background: AMBER, color: BG }}
+                    >
+                      {asking
+                        ? <Loader2 size={16} className="animate-spin" />
+                        : <Send size={16} />
+                      }
+                    </button>
+                  </div>
+                  <div className="flex justify-between text-[10px]" style={{ color: DIM }}>
+                    <span>{question.length}/{MAX_QUESTION_LENGTH}</span>
+                    <span>-1Q (INVALID는 무료)</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1177,7 +1323,7 @@ export default function RoomPage() {
                 style={{ background: '#8b3a3a22', border: '1px solid #8b3a3a44', color: '#e07070' }}
               >
                 <AlertTriangle size={12} />
-                오답 시 {COST_WRONG_ANSWER}T 차감 · {MAX_FINAL_ATTEMPTS - attemptsUsed}회 남음
+                오답 시 {COST_WRONG_ANSWER}Q 차감 · {MAX_FINAL_ATTEMPTS - attemptsUsed}회 남음
               </div>
               <form onSubmit={submitFinal}>
                 <textarea

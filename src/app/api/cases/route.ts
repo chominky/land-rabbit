@@ -9,7 +9,6 @@ export async function GET() {
       id: c.id,
       title: c.title,
       difficulty: c.difficulty,
-      tags: c.tags || [],
       brief: c.brief,
       keyFactLabels: (c.keyFacts || []).map((f) => ({
         id: f.id, label: f.label, required: f.required,
@@ -27,7 +26,7 @@ export async function GET() {
 
   let query = supabase
     .from('cases')
-    .select('id, title, difficulty, tags, brief, key_facts, images, status')
+    .select('id, title, difficulty, brief, key_facts, images, status')
     .eq('status', 'published');
 
   if (isProduction) {
@@ -44,7 +43,6 @@ export async function GET() {
     id: c.id,
     title: c.title,
     difficulty: c.difficulty,
-    tags: c.tags || [],
     brief: c.brief,
     keyFactLabels: (c.key_facts as Array<{ id: string; label: string; required: boolean }>).map(
       (f) => ({ id: f.id, label: f.label, required: f.required })

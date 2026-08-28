@@ -301,6 +301,8 @@ async function handleMultiVerdict(
       nickname: player.nickname,
       solved: aiResult.solved,
       accuracy: aiResult.accuracy,
+      answer,
+      feedback: aiResult.feedback,
     },
   });
 

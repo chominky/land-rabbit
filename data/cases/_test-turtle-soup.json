@@ -2,7 +2,6 @@
   "id": "_test-turtle-soup",
   "title": "바다거북 수프",
   "difficulty": 2,
-  "tags": ["고전", "표류", "테스트"],
   "status": "published",
   "images": [
     "/cases/_test-turtle-soup/0.png"

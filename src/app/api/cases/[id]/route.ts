@@ -17,7 +17,6 @@ export async function GET(
       id: c.id,
       title: c.title,
       difficulty: c.difficulty,
-      tags: c.tags || [],
       brief: c.brief,
       keyFactLabels: (c.keyFacts || []).map((f) => ({
         id: f.id, label: f.label, required: f.required,
@@ -33,7 +32,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from('cases')
-    .select('id, title, difficulty, tags, brief, key_facts, images, status')
+    .select('id, title, difficulty, brief, key_facts, images, status')
     .eq('id', id)
     .eq('status', 'published')
     .single();
@@ -46,7 +45,6 @@ export async function GET(
     id: data.id,
     title: data.title,
     difficulty: data.difficulty,
-    tags: data.tags || [],
     brief: data.brief,
     keyFactLabels: (data.key_facts as Array<{ id: string; label: string; required: boolean }>).map(
       (f) => ({ id: f.id, label: f.label, required: f.required })

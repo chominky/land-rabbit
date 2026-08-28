@@ -8,7 +8,6 @@ create table if not exists cases (
   id text primary key,
   title text not null,
   difficulty smallint not null default 2,
-  tags text[] default '{}',
   status text not null default 'draft',
   images text[] default '{}',
   image_meta jsonb default '[]',

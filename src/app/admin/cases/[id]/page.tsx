@@ -20,7 +20,6 @@ type CaseForm = {
   id: string;
   title: string;
   difficulty: 1 | 2 | 3 | 4 | 5;
-  tags: string; // comma-separated in form
   brief: string;
   truth: string;
   keyFacts: KeyFact[];
@@ -308,26 +307,6 @@ function PreviewPanel({ form }: { form: CaseForm }) {
         {stars} &nbsp; Difficulty {form.difficulty}
       </div>
 
-      {form.tags && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '14px' }}>
-          {form.tags.split(',').map((t) => t.trim()).filter(Boolean).map((tag) => (
-            <span
-              key={tag}
-              style={{
-                background: 'rgba(200,162,78,0.1)',
-                color: '#c8a24e',
-                border: '1px solid rgba(200,162,78,0.2)',
-                borderRadius: '3px',
-                padding: '2px 8px',
-                fontSize: '11px',
-              }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
-
       <div style={{ color: '#8b92a0', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px', borderBottom: '1px solid #2a2e38', paddingBottom: '16px' }}>
         {form.brief || '브리핑 없음'}
       </div>
@@ -373,7 +352,6 @@ export default function CaseEditorPage() {
     id: '',
     title: '',
     difficulty: 3,
-    tags: '',
     brief: '',
     truth: '',
     keyFacts: [],
@@ -398,7 +376,6 @@ export default function CaseEditorPage() {
           id: data.id ?? '',
           title: data.title ?? '',
           difficulty: data.difficulty ?? 3,
-          tags: (data.tags ?? []).join(', '),
           brief: data.brief ?? '',
           truth: data.truth ?? '',
           keyFacts: (data.keyFacts ?? data.key_facts ?? []).map((kf: KeyFact) => ({
@@ -451,7 +428,6 @@ export default function CaseEditorPage() {
       id: form.id,
       title: form.title,
       difficulty: form.difficulty,
-      tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
       brief: form.brief,
       truth: form.truth,
       key_facts: form.keyFacts.map((kf) => ({
@@ -527,7 +503,6 @@ export default function CaseEditorPage() {
           id: data.id ?? '',
           title: data.title ?? '',
           difficulty: data.difficulty ?? 3,
-          tags: (data.tags ?? []).join(', '),
           brief: data.brief ?? '',
           truth: data.truth ?? '',
           keyFacts: (data.keyFacts ?? data.key_facts ?? []).map((kf: KeyFact) => ({
@@ -633,10 +608,10 @@ export default function CaseEditorPage() {
               </Field>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px', marginBottom: '18px' }}>
+            <div style={{ marginBottom: '18px' }}>
               <Field label="Difficulty (1-5)">
                 <select
-                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  style={{ ...inputStyle, width: '160px', cursor: 'pointer' }}
                   value={form.difficulty}
                   onChange={(e) => set('difficulty', Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
                 >
@@ -644,9 +619,6 @@ export default function CaseEditorPage() {
                     <option key={n} value={n}>{n} — {'★'.repeat(n)}</option>
                   ))}
                 </select>
-              </Field>
-              <Field label="Tags (comma separated)">
-                <input style={inputStyle} value={form.tags} onChange={(e) => set('tags', e.target.value)} placeholder="미스터리, 추리, ..." />
               </Field>
             </div>
 
