@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildVerdictSystemPrompt } from '@/lib/ai/prompts';
-import { useFileDb, loadCase, saveGameRecord } from '@/lib/fileDb';
+import { useFileDb, loadCase, saveGameRecord, mapSupabaseToCaseData } from '@/lib/fileDb';
 import {
   COST_WRONG_ANSWER,
   MAX_FINAL_ATTEMPTS,
@@ -68,7 +68,7 @@ async function handleSingleVerdict(
       .select('*')
       .eq('id', caseId)
       .single();
-    if (caseData) c = caseData as unknown as CaseData;
+    if (caseData) c = mapSupabaseToCaseData(caseData);
   }
 
   if (!c) {

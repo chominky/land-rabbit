@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { useFileDb, loadCase } from '@/lib/fileDb';
+import { useFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
 import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildJudgeSystemPrompt, buildVerdictSystemPrompt } from '@/lib/ai/prompts';
 import { CaseData, Verdict, FactResult } from '@/lib/types';
@@ -25,7 +25,7 @@ export async function POST(
       .select('*')
       .eq('id', id)
       .single();
-    if (caseData) c = caseData as unknown as CaseData;
+    if (caseData) c = mapSupabaseToCaseData(caseData);
   }
 
   if (!c) {

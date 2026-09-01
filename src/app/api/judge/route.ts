@@ -3,7 +3,7 @@ import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildJudgeSystemPrompt } from '@/lib/ai/prompts';
 import { normalizeQuestion } from '@/lib/roomCode';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { useFileDb, loadCase } from '@/lib/fileDb';
+import { useFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
 import {
   COST_QUESTION,
   INITIAL_TOKENS,
@@ -81,7 +81,7 @@ async function handleSinglePlayer(
       .select('*')
       .eq('id', caseId)
       .single();
-    if (caseData) c = caseData as unknown as CaseData;
+    if (caseData) c = mapSupabaseToCaseData(caseData);
   }
 
   if (!c) {

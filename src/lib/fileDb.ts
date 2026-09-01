@@ -41,6 +41,16 @@ export function useFileDb(): boolean {
   return process.env.USE_FILE_DB === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function mapSupabaseToCaseData(row: any): CaseData {
+  return {
+    ...row,
+    imageMeta: row.imageMeta || row.image_meta || [],
+    keyFacts: row.keyFacts || row.key_facts || [],
+    redHerrings: row.redHerrings || row.red_herrings || [],
+  } as CaseData;
+}
+
 export function loadAllCases(): CaseData[] {
   try {
     const files = fs.readdirSync(CASES_DIR).filter((f) => f.endsWith('.json'));
