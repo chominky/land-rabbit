@@ -132,28 +132,28 @@ async function handleSingleVerdict(
     !aiResult.solved &&
     (attemptsUsed + 1 >= MAX_FINAL_ATTEMPTS || tokensAfterPenalty <= 0);
 
-  // Save game record when game ends
-  if (aiResult.solved || gameOver) {
-    try {
-      const ip = request.headers.get('x-forwarded-for') || 'unknown';
-      const questions = ((body.questions || body.previousQuestions || []) as { text: string; verdict: string }[])
-        .map((q) => ({ text: q.text, verdict: q.verdict }));
-      saveGameRecord({
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        caseId,
-        caseTitle: c.title,
-        ip,
-        solved: aiResult.solved,
-        score: aiResult.solved ? score : undefined,
-        rank: aiResult.solved ? rank : 'D',
-        accuracy: aiResult.accuracy,
-        tokensLeft: tokensAfterPenalty,
-        totalQuestions: questions.length,
-        questions,
-        finalAnswer: answer,
-        finishedAt: new Date().toISOString(),
-      });
-    } catch { /* ignore save errors */ }
+  // Save game record on every final answer submission
+  try {
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const questions = ((body.questions || body.previousQuestions || []) as { text: string; verdict: string }[])
+      .map((q) => ({ text: q.text, verdict: q.verdict }));
+    saveGameRecord({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      caseId,
+      caseTitle: c.title,
+      ip,
+      solved: aiResult.solved,
+      score: aiResult.solved ? score : undefined,
+      rank: aiResult.solved ? rank : 'D',
+      accuracy: aiResult.accuracy,
+      tokensLeft: tokensAfterPenalty,
+      totalQuestions: questions.length,
+      questions,
+      finalAnswer: answer,
+      finishedAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Failed to save game record:', err);
   }
 
   return NextResponse.json({

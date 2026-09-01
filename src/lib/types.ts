@@ -13,6 +13,7 @@ export type KeyFact = {
 export type ImageMeta = {
   index: number;
   hintsFacts: string[];
+  description?: string;
 };
 
 export type CaseData = {

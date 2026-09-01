@@ -12,8 +12,13 @@ export function buildJudgeSystemPrompt(
 
   const imageStr =
     revealedImageMeta.length > 0
-      ? revealedImageMeta.map((m) => `index ${m.index}`).join(', ')
-      : 'none';
+      ? revealedImageMeta
+          .map((m) => {
+            const desc = m.description ? `: ${m.description}` : '';
+            return `삽화 ${m.index + 1}${desc}`;
+          })
+          .join('\n')
+      : '없음';
 
   return `너는 '바다거북스프' 형식 추리 게임의 심판, '기록관'이다.
 아래 [사건 전말]만을 유일한 진실로 삼아, 플레이어의 질문을 정확히 하나로 분류한다.
@@ -46,6 +51,7 @@ ${factsStr}
 - YES/NO로 명확히 갈리는 질문을 MAYBE로 회피하지 않는다. MAYBE는 위 세 조건에만 쓴다.
 - 전말에서 무언가가 거짓 명칭으로 불렸다면(예: A를 B라고 속였다), "B를 한 적이 있는가?"에 대한 답은 NO이다. 실제 정체(A)를 기준으로 판정하고, 붙여진 이름(B)을 기준으로 판정하지 않는다.
 - 원인과 계기를 구분한다. 어떤 사건의 직접적 원인이 X이고, X를 알게 된 계기가 Y일 때, "원인이 Y인가?"는 MAYBE이다. Y는 촉발 조건이지 원인 자체가 아니다.
+- 삽화 관련 질문: 공개된 삽화의 묘사를 참고하여 판정한다. 아직 공개되지 않은 삽화에 대한 질문은 "아직 공개되지 않은 삽화입니다"라고 comment에 쓰고 INVALID로 처리한다.
 - 출력은 JSON 객체 하나뿐이다. 코드펜스, 설명, 접두사 금지.
 
 [revealedFacts 판정 기준]
