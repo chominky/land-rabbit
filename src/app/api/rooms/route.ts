@@ -3,7 +3,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { generateRoomCode } from '@/lib/roomCode';
 import { INITIAL_TOKENS, MAX_PLAYERS } from '@/lib/gameConfig';
 import { CaseData } from '@/lib/types';
-import { useFileDb, loadCase } from '@/lib/fileDb';
+import { isFileDb, loadCase } from '@/lib/fileDb';
 
 // Create room
 export async function POST(request: NextRequest) {
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Verify case exists and is published
     let caseData: CaseData | null = null;
-    if (useFileDb()) {
+    if (isFileDb()) {
       caseData = loadCase(caseId);
       if (caseData && caseData.status !== 'published') caseData = null;
     } else {

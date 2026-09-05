@@ -1,21 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { useFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
+import { isFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
 import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildJudgeSystemPrompt, buildVerdictSystemPrompt } from '@/lib/ai/prompts';
 import { CaseData, Verdict, FactResult } from '@/lib/types';
+import { requireAdmin } from '@/lib/adminGuard';
 
 // Test judge or verdict
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { id } = await params;
   const body = await request.json();
   const { type, input } = body; // type: 'judge' | 'verdict'
 
   let c: CaseData | null = null;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     c = loadCase(id);
   } else {
     const { createServiceClient } = await import('@/lib/supabase/server');

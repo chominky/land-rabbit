@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { CasePublicDTO } from '@/lib/types';
-import { useFileDb, loadPublishedCases } from '@/lib/fileDb';
+import { isFileDb, loadPublishedCases } from '@/lib/fileDb';
 
 export async function GET() {
-  if (useFileDb()) {
+  if (isFileDb()) {
     const cases = loadPublishedCases();
     const dtos: CasePublicDTO[] = cases.map((c) => ({
       id: c.id,

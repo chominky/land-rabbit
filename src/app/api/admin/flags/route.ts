@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
-import { useFileDb } from '@/lib/fileDb';
+import { isFileDb } from '@/lib/fileDb';
+import { requireAdmin } from '@/lib/adminGuard';
 
 export async function GET() {
-  if (useFileDb()) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  if (isFileDb()) {
     return NextResponse.json([]);
   }
 

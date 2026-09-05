@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { useFileDb, loadCase, saveCase, deleteCase as fileDeleteCase } from '@/lib/fileDb';
+import { isFileDb, loadCase, saveCase, deleteCase as fileDeleteCase } from '@/lib/fileDb';
+import { requireAdmin } from '@/lib/adminGuard';
 
 // Get single case (admin - includes truth)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { id } = await params;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     const c = loadCase(id);
     if (!c) return NextResponse.json({ error: 'Case not found' }, { status: 404 });
     return NextResponse.json(c);
@@ -34,10 +38,13 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { id } = await params;
   const body = await request.json();
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     const existing = loadCase(id);
     if (!existing) return NextResponse.json({ error: 'Case not found' }, { status: 404 });
     // Map snake_case fields from the editor to camelCase for fileDb
@@ -74,9 +81,12 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { id } = await params;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     fileDeleteCase(id);
     return NextResponse.json({ success: true });
   }

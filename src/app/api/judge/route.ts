@@ -3,7 +3,7 @@ import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildJudgeSystemPrompt } from '@/lib/ai/prompts';
 import { normalizeQuestion } from '@/lib/roomCode';
 import { checkRateLimit } from '@/lib/rateLimit';
-import { useFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
+import { isFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
 import {
   COST_QUESTION,
   INITIAL_TOKENS,
@@ -71,7 +71,7 @@ async function handleSinglePlayer(
   // Load case from file or Supabase
   let c: CaseData | null = null;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     c = loadCase(caseId);
   } else {
     const { createServiceClient } = await import('@/lib/supabase/server');

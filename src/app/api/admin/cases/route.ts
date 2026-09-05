@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { useFileDb, loadAllCases, loadCase, saveCase } from '@/lib/fileDb';
+import { isFileDb, loadAllCases, loadCase, saveCase } from '@/lib/fileDb';
 import { CaseData } from '@/lib/types';
+import { requireAdmin } from '@/lib/adminGuard';
 
 // List all cases (admin)
 export async function GET() {
-  if (useFileDb()) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
+  if (isFileDb()) {
     const cases = loadAllCases();
     return NextResponse.json(cases);
   }
@@ -25,6 +29,9 @@ export async function GET() {
 
 // Create new case
 export async function POST(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const body = await request.json();
   const { id, title } = body;
 
@@ -32,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'ID and title required' }, { status: 400 });
   }
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     const existing = loadCase(id);
     if (existing) {
       return NextResponse.json({ error: 'Case ID already exists' }, { status: 409 });

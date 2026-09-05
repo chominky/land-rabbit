@@ -37,7 +37,13 @@ export function saveGameRecord(record: GameRecord): void {
   fs.writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2), 'utf-8');
 }
 
-export function useFileDb(): boolean {
+/**
+ * 파일 DB 모드 여부.
+ *
+ * 이름에 `use` 접두사를 쓰지 않는다 — React Hooks 린트가 훅으로 오인해
+ * 라우트 핸들러마다 rules-of-hooks 오탐을 낸다.
+ */
+export function isFileDb(): boolean {
   return process.env.USE_FILE_DB === 'true' || !process.env.NEXT_PUBLIC_SUPABASE_URL;
 }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { useFileDb, loadCase } from '@/lib/fileDb';
+import { isFileDb, loadCase } from '@/lib/fileDb';
 import { CaseData } from '@/lib/types';
 
 export async function POST(
@@ -12,7 +12,7 @@ export async function POST(
 
   let hints: string[] = [];
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     const c = loadCase(id);
     if (!c) return NextResponse.json({ error: 'Case not found' }, { status: 404 });
     hints = c.hints || [];

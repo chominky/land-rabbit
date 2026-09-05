@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { isAdminAuthenticated } from '@/lib/adminGuard';
+import { requireAdmin } from '@/lib/adminGuard';
 import { loadHistory } from '@/lib/fileDb';
 
 export async function GET() {
-  if (!(await isAdminAuthenticated())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = await requireAdmin();
+  if (denied) return denied;
 
   const history = loadHistory();
   return NextResponse.json(history);

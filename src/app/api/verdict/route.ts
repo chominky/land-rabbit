@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildVerdictSystemPrompt } from '@/lib/ai/prompts';
-import { useFileDb, loadCase, saveGameRecord, mapSupabaseToCaseData } from '@/lib/fileDb';
+import { isFileDb, loadCase, saveGameRecord, mapSupabaseToCaseData } from '@/lib/fileDb';
 import {
   COST_WRONG_ANSWER,
   MAX_FINAL_ATTEMPTS,
@@ -58,7 +58,7 @@ async function handleSingleVerdict(
 ) {
   let c: CaseData | null = null;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     c = loadCase(caseId);
   } else {
     const { createServiceClient } = await import('@/lib/supabase/server');

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { useFileDb } from '@/lib/fileDb';
+import { isFileDb } from '@/lib/fileDb';
 import fs from 'fs';
 import path from 'path';
+import { requireAdmin } from '@/lib/adminGuard';
 
 const GOLDEN_DIR = path.join(process.cwd(), 'tests', 'golden');
 
@@ -35,9 +36,12 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { id } = await params;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     return NextResponse.json(loadGoldenTests(id));
   }
 
@@ -61,11 +65,14 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { id } = await params;
   const body = await request.json();
   const { question, expected_verdict } = body;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     const tests = loadGoldenTests(id);
     const newTest: GoldenTest = {
       id: `gt_${Date.now()}`,
@@ -96,6 +103,9 @@ export async function POST(
 
 // Delete golden test
 export async function DELETE(request: NextRequest) {
+  const denied = await requireAdmin();
+  if (denied) return denied;
+
   const { searchParams } = new URL(request.url);
   const testId = searchParams.get('testId');
 
@@ -103,7 +113,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: 'testId required' }, { status: 400 });
   }
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     // Search all golden test files
     try {
       const files = fs.readdirSync(GOLDEN_DIR).filter((f) => f.endsWith('.json'));

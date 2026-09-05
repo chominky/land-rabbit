@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CasePublicDTO } from '@/lib/types';
-import { useFileDb, loadCase } from '@/lib/fileDb';
+import { isFileDb, loadCase } from '@/lib/fileDb';
 
 export async function GET(
   _request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  if (useFileDb()) {
+  if (isFileDb()) {
     const c = loadCase(id);
     if (!c || c.status !== 'published') {
       return NextResponse.json({ error: 'Case not found' }, { status: 404 });

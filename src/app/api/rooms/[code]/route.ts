@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { useFileDb, loadCase } from '@/lib/fileDb';
+import { isFileDb, loadCase } from '@/lib/fileDb';
 
 // Get room state (public data only)
 export async function GET(
@@ -40,7 +40,7 @@ export async function GET(
 
   // Get case public info
   let casePublic = null;
-  if (useFileDb()) {
+  if (isFileDb()) {
     const fileCase = loadCase(room.case_id);
     if (fileCase) {
       casePublic = {
