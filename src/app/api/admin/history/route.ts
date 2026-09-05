@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/adminGuard';
-import { loadHistory } from '@/lib/fileDb';
+import { loadRecords } from '@/lib/history';
 
 export async function GET() {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  const history = loadHistory();
+  const history = await loadRecords();
   return NextResponse.json(history);
 }

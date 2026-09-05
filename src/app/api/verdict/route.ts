@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildVerdictSystemPrompt } from '@/lib/ai/prompts';
-import { isFileDb, loadCase, saveGameRecord, mapSupabaseToCaseData } from '@/lib/fileDb';
+import { isFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
+import { saveRecord } from '@/lib/history';
 import {
   COST_WRONG_ANSWER,
   MAX_FINAL_ATTEMPTS,
@@ -137,7 +138,7 @@ async function handleSingleVerdict(
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     const questions = ((body.questions || body.previousQuestions || []) as { text: string; verdict: string }[])
       .map((q) => ({ text: q.text, verdict: q.verdict }));
-    saveGameRecord({
+    await saveRecord({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       caseId,
       caseTitle: c.title,

@@ -134,6 +134,29 @@ CREATE TABLE IF NOT EXISTS flags (
 ALTER TABLE flags ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "No anonymous access" ON flags FOR ALL USING (false);
 
+-- Single-player game history (admin stats source)
+CREATE TABLE IF NOT EXISTS game_history (
+  id text PRIMARY KEY,
+  case_id text REFERENCES cases(id) ON DELETE CASCADE,
+  case_title text NOT NULL,
+  ip text,
+  solved boolean NOT NULL DEFAULT false,
+  score int,
+  rank text,
+  accuracy int,
+  tokens_left int NOT NULL DEFAULT 0,
+  total_questions int NOT NULL DEFAULT 0,
+  questions jsonb NOT NULL DEFAULT '[]'::jsonb,
+  final_answer text,
+  finished_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS game_history_case_idx ON game_history(case_id);
+CREATE INDEX IF NOT EXISTS game_history_finished_idx ON game_history(finished_at DESC);
+
+ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "No anonymous access" ON game_history FOR ALL USING (false);
+
 -- ============================================
 -- RPC: Atomic token deduction for coop mode
 -- ============================================
