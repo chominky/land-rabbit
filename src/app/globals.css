@@ -7,6 +7,8 @@
  * 라이트 테마(P1-C)는 이 블록을 [data-theme="light"]로 덮어쓰기만 하면 된다.
  */
 :root {
+  color-scheme: dark;
+
   /* 배경 */
   --bg: #0b0d11;
   --surface: #12151c;
@@ -22,7 +24,7 @@
   /* 텍스트 */
   --fg: #e8e6e3;
   --muted: #8b8d93;
-  --dim: #5a5c63;
+  --dim: #82858d;
 
   /* 강조 */
   --accent: #c8a24e;
@@ -74,8 +76,69 @@
 [data-scope="admin"] {
   --fg: #e8eaf0;
   --muted: #8b92a0;
-  --dim: #5a6070;
+  --dim: #7b8294;
   --surface-3: #1a1e28;
+}
+
+/* ── 라이트 테마 (P1-C) ─────────────────────────────────────────────────────
+ * <html data-theme="light">일 때만 적용된다. 초기 값은 layout.tsx의 인라인
+ * 스크립트가 첫 페인트 전에 지정한다(FOUC 방지).
+ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: #f4f2ed;
+  --surface: #ffffff;
+  --surface-2: #faf8f4;
+  --surface-3: #eae7df;
+  --bg-deep: #eeebe3;
+  --surface-inset: #edeae2;
+
+  --border: #d8d3c8;
+  --border-strong: #a9a396;
+
+  --fg: #1b1d22;
+  --muted: #585c66;
+  --dim: #676b74;
+
+  --accent: #8a6a1f;
+  --accent-mid: #7d6a33;
+  --accent-dim: #6f5715;
+  --accent-deep: #e0d4b0;
+
+  --yes: #2f6b38;
+  --no: #8b3a3a;
+  --maybe: #6f5f22;
+  --neutral: #5f636c;
+
+  --danger: #b02a1c;
+  --danger-fg: #b02a1c;
+  --danger-soft: #a8362f;
+  --danger-surface: #fdecea;
+  --success: #1f7a37;
+  --warning: #8a6a0a;
+  --info: #4249c4;
+  --info-surface: #e7e9fb;
+  --info-border: #8f97dd;
+  --gray: #5f6672;
+
+  --scrim: rgba(0, 0, 0, 0.5);
+  --scrim-strong: rgba(0, 0, 0, 0.7);
+
+  --rank-s: #8a6a1f;
+  --rank-a: #1f7a37;
+  --rank-b: #0a6a9e;
+  --rank-c: #6a3fae;
+  --rank-d: #585c66;
+}
+
+/* 커스텀 프로퍼티는 가장 가까운 조상이 이긴다 —
+ * 라이트 관리자 값은 반드시 같은 [data-scope] 요소를 더 높은 명시도로 다시 잡아야 한다. */
+[data-theme="light"] [data-scope="admin"] {
+  --fg: #171a21;
+  --muted: #4f5666;
+  --dim: #616978;
+  --surface-3: #e9ecf1;
 }
 
 @theme inline {

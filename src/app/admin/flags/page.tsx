@@ -106,7 +106,7 @@ export default function FlagsPage() {
                   <div className="flex items-center gap-2">
                     <span className="text-xs" style={{ color: 'var(--muted)' }}>판정:</span>
                     <span
-                      className="stamp text-white"
+                      className="stamp text-on-solid"
                       style={{
                         background:
                           flag.verdict_or_status === 'YES' ? 'var(--yes)' :

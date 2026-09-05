@@ -530,7 +530,7 @@ export default function PlayPage() {
                     {q.text}
                   </p>
                   <div className="flex items-center gap-1">
-                    <span className={`stamp ${VERDICT_COLORS[q.verdict]} text-white`}>
+                    <span className={`stamp ${VERDICT_COLORS[q.verdict]} text-on-solid`}>
                       {VERDICT_LABELS[q.verdict]}
                     </span>
                     <button
@@ -704,7 +704,7 @@ export default function PlayPage() {
                   const fact = caseInfo.keyFactLabels.find((f) => f.id === r.id);
                   return (
                     <div key={r.id} className="flex items-center gap-2 p-2 rounded border" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
-                      <span className={`stamp text-white ${r.status === 'hit' ? 'bg-yes' : r.status === 'partial' ? 'bg-maybe' : 'bg-no'}`}>
+                      <span className={`stamp text-on-solid ${r.status === 'hit' ? 'bg-yes' : r.status === 'partial' ? 'bg-maybe' : 'bg-no'}`}>
                         {r.status}
                       </span>
                       <span className="text-sm" style={{ color: 'var(--fg)' }}>

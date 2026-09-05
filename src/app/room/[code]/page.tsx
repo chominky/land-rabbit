@@ -61,7 +61,7 @@ type ChatLine = { id: string; nickname: string; text: string; ts: number };
 function VerdictBadge({ verdict }: { verdict: Verdict }) {
   return (
     <span
-      className="stamp text-white shrink-0"
+      className="stamp text-on-solid shrink-0"
       style={{ background: VERDICT_BG[verdict] }}
     >
       {VERDICT_LABEL[verdict]}

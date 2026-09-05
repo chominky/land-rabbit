@@ -12,6 +12,7 @@ import {
   FolderOpen,
 } from 'lucide-react';
 import { CasePublicDTO, SinglePlayerState } from '@/lib/types';
+import { rankBadgeClass } from '@/lib/theme';
 import { INITIAL_TOKENS } from '@/lib/gameConfig';
 
 const SAVES_KEY = 'yesno_saves';
@@ -61,14 +62,7 @@ function DifficultyStars({ level }: { level: 1 | 2 | 3 | 4 | 5 }) {
 }
 
 function RankBadge({ rank, score }: { rank: string; score: number }) {
-  const rankColors: Record<string, string> = {
-    S: 'text-accent border-accent bg-accent/10',
-    A: 'text-emerald-400 border-emerald-400 bg-emerald-400/10',
-    B: 'text-sky-400 border-sky-400 bg-sky-400/10',
-    C: 'text-violet-400 border-violet-400 bg-violet-400/10',
-    D: 'text-muted border-border bg-border/40',
-  };
-  const colorClass = rankColors[rank] ?? rankColors['D'];
+  const colorClass = rankBadgeClass(rank);
 
   return (
     <div className={`flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-bold ${colorClass}`}>

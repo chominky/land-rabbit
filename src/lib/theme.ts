@@ -79,6 +79,19 @@ export const RANK_TOKEN: Record<Rank, string> = {
   D: 'var(--rank-d)',
 };
 
+/** 랭크 배지용 Tailwind 클래스 (텍스트/테두리/배경 한 세트). */
+export const RANK_BADGE_CLASS: Record<Rank, string> = {
+  S: 'text-rank-s border-rank-s bg-rank-s/10',
+  A: 'text-rank-a border-rank-a bg-rank-a/10',
+  B: 'text-rank-b border-rank-b bg-rank-b/10',
+  C: 'text-rank-c border-rank-c bg-rank-c/10',
+  D: 'text-rank-d border-border bg-border/40',
+};
+
+export function rankBadgeClass(rank: string | null | undefined): string {
+  return RANK_BADGE_CLASS[(rank as Rank) ?? 'D'] ?? RANK_BADGE_CLASS.D;
+}
+
 export function rankToken(rank: string | null | undefined): string {
   return RANK_TOKEN[(rank as Rank) ?? 'D'] ?? RANK_TOKEN.D;
 }
