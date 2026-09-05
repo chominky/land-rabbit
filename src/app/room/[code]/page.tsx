@@ -18,6 +18,7 @@ import {
   Room, RoomPlayer, RoomQuestion, RoomEvent, CasePublicDTO, Verdict,
 } from '@/lib/types';
 import { T, alpha, VERDICT_TOKEN } from '@/lib/theme';
+import { useToast } from '@/components/Toast';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG     = T.bg;
@@ -102,6 +103,7 @@ function PlayerRow({ p, isMe, isHost, isTurn }: {
 // ── Main component ────────────────────────────────────────────────────────────
 export default function RoomPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const { code } = useParams<{ code: string }>();
   const upperCode = code?.toUpperCase() ?? '';
 
@@ -342,11 +344,14 @@ export default function RoomPage() {
         body: JSON.stringify({ playerId: identity.playerId, hintLevel: hints.length }),
       });
       const data = await res.json();
-      if (!res.ok) { alert(data.error || '힌트 구매 실패'); return; }
+      if (!res.ok) { toast(data.error || '힌트를 구매하지 못했습니다.', { variant: 'error' }); return; }
       if (data.hint) setHints((prev) => [...prev, data.hint as string]);
       await fetchRoom();
     } catch {
-      alert('오류가 발생했습니다.');
+      toast('힌트를 불러오지 못했습니다. 네트워크를 확인해주세요.', {
+        variant: 'error',
+        action: { label: '다시 시도', onClick: buyHint },
+      });
     } finally {
       setHintLoading(false);
     }
@@ -362,10 +367,13 @@ export default function RoomPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerId: identity.playerId }),
       });
-      if (!res.ok) { const d = await res.json(); alert(d.error || '미리보기 실패'); return; }
+      if (!res.ok) { const d = await res.json(); toast(d.error || '단서를 공개하지 못했습니다.', { variant: 'error' }); return; }
       await fetchRoom();
     } catch {
-      alert('오류가 발생했습니다.');
+      toast('단서를 공개하지 못했습니다. 네트워크를 확인해주세요.', {
+        variant: 'error',
+        action: { label: '다시 시도', onClick: buyPreview },
+      });
     } finally {
       setPreviewLoading(false);
     }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Send, Flag, Eye, Lightbulb, FileText, Lock, Unlock,
@@ -12,6 +12,14 @@ import {
   calculateScore, getRank
 } from '@/lib/gameConfig';
 import { Verdict, CasePublicDTO, SinglePlayerState } from '@/lib/types';
+import { useToast } from '@/components/Toast';
+
+/** 스포일러 없는 일반형 예시. 첫 질문의 문턱을 낮추는 용도다. */
+const STARTER_QUESTIONS = [
+  '피해자는 남성인가요?',
+  '사건 현장에 다른 사람이 있었나요?',
+  '사고가 아니라 의도된 일인가요?',
+];
 
 const VERDICT_COLORS: Record<Verdict, string> = {
   YES: 'bg-yes',
@@ -32,6 +40,7 @@ const VERDICT_LABELS: Record<Verdict, string> = {
 
 export default function PlayPage() {
   const router = useRouter();
+  const { toast } = useToast();
   const { caseId } = useParams<{ caseId: string }>();
   const [caseInfo, setCaseInfo] = useState<CasePublicDTO | null>(null);
   const [state, setState] = useState<SinglePlayerState | null>(null);
@@ -98,8 +107,9 @@ export default function PlayPage() {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' });
   }, [state?.questions]);
 
-  const submitQuestion = useCallback(async () => {
-    if (!state || loading || !question.trim()) return;
+  async function submitQuestion(override?: string) {
+    const text = (override ?? question).trim();
+    if (!state || loading || !text) return;
     if (state.tokens < 1) return;
     if (state.solved || state.gameOver) return;
 
@@ -110,7 +120,7 @@ export default function PlayPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           caseId,
-          question: question.trim(),
+          question: text,
           tokens: state.tokens,
           totalQuestions: state.totalQuestions,
           revealedImageCount: state.revealedImageCount,
@@ -120,12 +130,15 @@ export default function PlayPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || '오류가 발생했습니다.');
+        toast(data.error || '판정을 불러오지 못했습니다.', {
+          variant: 'error',
+          action: { label: '다시 시도', onClick: () => submitQuestion(text) },
+        });
         return;
       }
 
       if (data.cached) {
-        alert('이미 물어본 질문입니다.');
+        toast('이미 물어본 질문입니다. 질문은 차감되지 않았습니다.');
         return;
       }
 
@@ -142,7 +155,7 @@ export default function PlayPage() {
           questions: [
             ...prev.questions,
             {
-              text: question.trim(),
+              text,
               verdict: data.verdict,
               comment: data.comment,
               revealedFacts: data.revealedFacts || [],
@@ -169,11 +182,14 @@ export default function PlayPage() {
         setTimeout(() => setImageOverlay(null), 3000);
       }
     } catch {
-      alert('판정을 불러오지 못했습니다.');
+      toast('판정을 불러오지 못했습니다. 네트워크를 확인해주세요.', {
+        variant: 'error',
+        action: { label: '다시 시도', onClick: () => submitQuestion(text) },
+      });
     } finally {
       setLoading(false);
     }
-  }, [state, loading, question, caseId]);
+  }
 
   const submitFinalAnswer = async () => {
     if (!state || finalLoading || !finalAnswer.trim()) return;
@@ -193,7 +209,7 @@ export default function PlayPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.error || '오류가 발생했습니다.');
+        toast(data.error || '채점을 불러오지 못했습니다.', { variant: 'error' });
         setFinalLoading(false);
         return;
       }
@@ -217,10 +233,16 @@ export default function PlayPage() {
       if (data.solved || data.gameOver) {
         setShowResult(true);
       } else {
-        alert(data.feedback || '아직 부족합니다. 다시 시도해보세요.');
+        toast(data.feedback || '아직 부족합니다. 다시 시도해보세요.', {
+          variant: 'error',
+          duration: 7000,
+        });
       }
     } catch {
-      alert('채점을 불러오지 못했습니다.');
+      toast('채점을 불러오지 못했습니다. 네트워크를 확인해주세요.', {
+        variant: 'error',
+        action: { label: '다시 시도', onClick: submitFinalAnswer },
+      });
     } finally {
       setFinalLoading(false);
     }
@@ -252,6 +274,8 @@ export default function PlayPage() {
       if (data.hint) {
         setHints((prev) => [...prev, data.hint]);
         setShowHintModal(true);
+      } else {
+        throw new Error('no hint');
       }
     } catch {
       // Refund
@@ -260,6 +284,10 @@ export default function PlayPage() {
         return { ...prev, tokens: prev.tokens + COST_HINT, hintsUsed: prev.hintsUsed - 1 };
       });
       setHintsUsed((h) => h - 1);
+      toast(`힌트를 불러오지 못했습니다. ${COST_HINT}Q를 돌려드렸습니다.`, {
+        variant: 'error',
+        action: { label: '다시 시도', onClick: buyHint },
+      });
     }
   };
 
@@ -515,11 +543,26 @@ export default function PlayPage() {
 
           {/* Log */}
           <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-            {state.questions.length === 0 && (
+            {state.questions.length === 0 && !loading && (
               <div className="text-center py-12" style={{ color: 'var(--dim)' }}>
                 <FileText size={32} className="mx-auto mb-2 opacity-30" />
                 <p className="text-sm">질문을 시작하세요</p>
                 <p className="text-xs mt-1">예/아니오로 답할 수 있는 질문만 가능합니다</p>
+                {canAskQuestion && (
+                  <div className="mt-5 flex flex-wrap gap-2 justify-center">
+                    {STARTER_QUESTIONS.map((q) => (
+                      <button
+                        key={q}
+                        type="button"
+                        onClick={() => setQuestion(q)}
+                        className="px-2.5 py-1 rounded-full border text-xs transition-colors"
+                        style={{ borderColor: 'var(--border)', color: 'var(--muted)', background: 'var(--surface-2)' }}
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
             {state.questions.map((q, i) => (
@@ -564,6 +607,22 @@ export default function PlayPage() {
                 )}
               </div>
             ))}
+
+            {/* 판정 대기 — 도장이 찍히기 전 자리표시자 */}
+            {loading && (
+              <div
+                className="rounded-lg p-3 border flex items-center gap-2"
+                style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
+                aria-live="polite"
+              >
+                <span className="text-xs" style={{ color: 'var(--dim)' }}>판정 중</span>
+                <span className="flex items-center gap-1">
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                  <span className="typing-dot" />
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Input */}
@@ -602,7 +661,7 @@ export default function PlayPage() {
                   type="text"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && submitQuestion()}
+                  onKeyDown={(e) => { if (e.key === 'Enter') submitQuestion(); }}
                   placeholder={canAskQuestion ? '예/아니오로 답할 수 있는 질문을 입력하세요...' : '게임이 종료되었습니다'}
                   disabled={!canAskQuestion || loading}
                   maxLength={MAX_QUESTION_LENGTH}
@@ -610,7 +669,7 @@ export default function PlayPage() {
                   style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--fg)' }}
                 />
                 <button
-                  onClick={submitQuestion}
+                  onClick={() => submitQuestion()}
                   disabled={!canAskQuestion || loading || !question.trim()}
                   className="px-4 py-2 rounded-lg disabled:opacity-30"
                   style={{ background: 'var(--accent)', color: 'var(--bg)' }}
@@ -722,7 +781,7 @@ export default function PlayPage() {
                 onClick={() => {
                   const text = `육지토끼고기 · ${caseInfo.title} · 남은질문 ${state.tokens} · ${state.rank || 'D'}랭크`;
                   navigator.clipboard.writeText(text);
-                  alert('복사되었습니다!');
+                  toast('결과를 클립보드에 복사했습니다.', { variant: 'success' });
                 }}
                 className="px-4 py-2 rounded text-sm border"
                 style={{ borderColor: 'var(--border)', color: 'var(--fg)' }}
