@@ -1,4 +1,4 @@
-# YES NO DETECTIVE
+# Land Rabbit
 
 AI가 판정하는 바다거북스프(수평사고 추리) 웹게임
 
