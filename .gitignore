@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 런타임 신고 저장소 (파일 DB 모드). 시드가 없으므로 추적하지 않는다.
+data/flags.json

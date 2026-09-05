@@ -127,9 +127,17 @@ CREATE TABLE IF NOT EXISTS flags (
   evidence text,
   ai_response jsonb,
   type text DEFAULT 'judge' CHECK (type IN ('judge', 'verdict')),
+  -- resolved는 예전 컬럼. 처리 상태는 status를 쓴다 (P3-C).
   resolved boolean DEFAULT false,
+  status text NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'resolved', 'dismissed')),
+  resolution_note text,
   created_at timestamptz DEFAULT now()
 );
+
+-- 기존 배포에 컬럼을 더한다 (재실행 안전)
+ALTER TABLE flags ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'open';
+ALTER TABLE flags ADD COLUMN IF NOT EXISTS resolution_note text;
+CREATE INDEX IF NOT EXISTS flags_status_idx ON flags(status);
 
 ALTER TABLE flags ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "No anonymous access" ON flags FOR ALL USING (false);
