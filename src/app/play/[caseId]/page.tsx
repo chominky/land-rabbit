@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Send, Flag, Eye, Lightbulb, FileText, Lock, Unlock,
-  AlertTriangle, ChevronLeft, X, Trophy, ArrowRight, ChevronDown, ChevronUp
+  AlertTriangle, ChevronLeft, X, Trophy, ArrowRight, ChevronDown, ChevronUp, Share2, ImageDown
 } from 'lucide-react';
 import {
   INITIAL_TOKENS, COST_HINT, COST_PREVIEW, COST_WRONG_ANSWER,
@@ -12,9 +12,11 @@ import {
   calculateScore, getRank
 } from '@/lib/gameConfig';
 import { Verdict, CasePublicDTO, SinglePlayerState } from '@/lib/types';
+import { rankToken } from '@/lib/theme';
 import { useToast } from '@/components/Toast';
 import { Modal } from '@/components/Modal';
 import { Onboarding, shouldShowOnboarding } from '@/components/Onboarding';
+import { FactMark, ShareCardData, shareCardImage, shareResultText } from '@/lib/shareCard';
 
 /** useSyncExternalStore용 — 구독할 외부 저장소가 없다. */
 const noopSubscribe = () => () => {};
@@ -25,6 +27,13 @@ const STARTER_QUESTIONS = [
   '사건 현장에 다른 사람이 있었나요?',
   '사고가 아니라 의도된 일인가요?',
 ];
+
+/** 채점 상태를 색뿐 아니라 글자로도 구분한다 (P2-B). */
+const FACT_STATUS_LABEL: Record<string, string> = {
+  hit: '적중',
+  partial: '부분',
+  miss: '놓침',
+};
 
 const VERDICT_COLORS: Record<Verdict, string> = {
   YES: 'bg-yes',
@@ -330,6 +339,35 @@ export default function PlayPage() {
     : AUTO_UNLOCK_INTERVAL;
 
   const expectedScore = calculateScore(state.tokens, 50);
+
+  const shareData: ShareCardData = {
+    caseTitle: caseInfo.title,
+    solved: state.solved,
+    rank: resultData?.rank ?? state.rank ?? 'D',
+    score: resultData?.score ?? state.score ?? 0,
+    tokensLeft: state.tokens,
+    totalQuestions: state.totalQuestions,
+    facts: (resultData?.results ?? []).map((r) => ({
+      label: caseInfo.keyFactLabels.find((f) => f.id === r.id)?.label ?? r.id,
+      status: r.status as FactMark['status'],
+    })),
+    url: typeof window !== 'undefined' ? window.location.origin : '',
+  };
+
+  async function handleShareImage() {
+    const outcome = await shareCardImage(shareData);
+    if (outcome === 'shared' || outcome === 'cancelled') return;
+    if (outcome === 'copied') toast('결과 카드를 클립보드에 복사했습니다.', { variant: 'success' });
+    else if (outcome === 'downloaded') toast('결과 카드를 이미지로 저장했습니다.', { variant: 'success' });
+    else toast('결과 카드를 만들지 못했습니다.', { variant: 'error' });
+  }
+
+  async function handleShareText() {
+    const outcome = await shareResultText(shareData);
+    if (outcome === 'shared' || outcome === 'cancelled') return;
+    if (outcome === 'copied') toast('결과를 클립보드에 복사했습니다.', { variant: 'success' });
+    else toast('결과를 공유하지 못했습니다.', { variant: 'error' });
+  }
   const isTokensLow = state.tokens <= 10;
   const canAskQuestion = state.tokens >= 1 && !state.solved && !state.gameOver;
   const mustFinalSubmit = state.tokens <= 0 && !state.solved && !state.gameOver && state.attemptsUsed < MAX_FINAL_ATTEMPTS;
@@ -762,20 +800,25 @@ export default function PlayPage() {
             <div className="text-center mb-8">
               {state.solved ? (
                 <>
-                  <Trophy size={48} className="mx-auto mb-3" style={{ color: 'var(--accent)' }} />
+                  <Trophy size={48} className="mx-auto mb-3 rank-reveal-icon" style={{ color: 'var(--accent)' }} />
                   <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--accent)' }}>사건 해결</h1>
-                  <div className="text-4xl font-bold mb-1" style={{ color: 'var(--fg)' }}>
+                  <div
+                    className={`text-5xl font-bold mb-1 rank-reveal ${resultData.rank === 'S' ? 'rank-reveal-s' : ''}`}
+                    style={{ color: rankToken(resultData.rank) }}
+                  >
                     {resultData.rank} 랭크
                   </div>
-                  <div className="text-lg" style={{ color: 'var(--muted)' }}>
-                    {resultData.score}점
+                  <div className="text-lg rank-reveal-sub" style={{ color: 'var(--muted)' }}>
+                    {resultData.score}점 · 남은 질문 {state.tokens}
                   </div>
                 </>
               ) : (
                 <>
                   <AlertTriangle size={48} className="mx-auto mb-3" style={{ color: 'var(--danger)' }} />
                   <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--danger)' }}>미해결</h1>
-                  <p className="text-sm" style={{ color: 'var(--muted)' }}>D 랭크</p>
+                  <p className="text-sm" style={{ color: 'var(--muted)' }}>
+                    질문 {state.totalQuestions}개 · 최종 추리 {state.attemptsUsed}회
+                  </p>
                 </>
               )}
             </div>
@@ -793,15 +836,20 @@ export default function PlayPage() {
             {/* Factor results */}
             {resultData.results && (
               <div className="mb-6 space-y-2">
-                <h2 className="text-sm font-bold" style={{ color: 'var(--muted)' }}>핵심 요소 채점</h2>
+                <h2 className="text-sm font-bold" style={{ color: 'var(--muted)' }}>
+                  핵심 요소 채점 · 적중 {resultData.results.filter((r) => r.status === 'hit').length}/{resultData.results.length}
+                </h2>
                 {resultData.results.map((r) => {
                   const fact = caseInfo.keyFactLabels.find((f) => f.id === r.id);
                   return (
                     <div key={r.id} className="flex items-center gap-2 p-2 rounded border" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
-                      <span className={`stamp text-on-solid ${r.status === 'hit' ? 'bg-yes' : r.status === 'partial' ? 'bg-maybe' : 'bg-no'}`}>
-                        {r.status}
+                      <span
+                        className={`stamp text-on-solid shrink-0 ${r.status === 'hit' ? 'bg-yes' : r.status === 'partial' ? 'bg-maybe' : 'bg-no'}`}
+                        aria-label={`채점: ${FACT_STATUS_LABEL[r.status] ?? r.status}`}
+                      >
+                        {FACT_STATUS_LABEL[r.status] ?? r.status}
                       </span>
-                      <span className="text-sm" style={{ color: 'var(--fg)' }}>
+                      <span className="text-sm min-w-0" style={{ color: 'var(--fg)' }}>
                         {fact?.label || r.id}
                       </span>
                     </div>
@@ -811,21 +859,26 @@ export default function PlayPage() {
             )}
 
             {/* Share */}
-            <div className="text-center space-y-3">
-              <button
-                onClick={() => {
-                  const text = `육지토끼고기 · ${caseInfo.title} · 남은질문 ${state.tokens} · ${state.rank || 'D'}랭크`;
-                  navigator.clipboard.writeText(text);
-                  toast('결과를 클립보드에 복사했습니다.', { variant: 'success' });
-                }}
-                className="px-4 py-2 rounded text-sm border"
-                style={{ borderColor: 'var(--border)', color: 'var(--fg)' }}
-              >
-                결과 공유 복사
-              </button>
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  onClick={handleShareImage}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm border"
+                  style={{ borderColor: 'var(--border)', color: 'var(--fg)', background: 'var(--surface-2)' }}
+                >
+                  <ImageDown size={15} /> 결과 카드 저장
+                </button>
+                <button
+                  onClick={handleShareText}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm border"
+                  style={{ borderColor: 'var(--border)', color: 'var(--fg)', background: 'var(--surface-2)' }}
+                >
+                  <Share2 size={15} /> 결과 공유
+                </button>
+              </div>
               <button
                 onClick={() => router.push('/cases')}
-                className="flex items-center gap-1 mx-auto px-4 py-2 rounded text-sm"
+                className="w-full flex items-center justify-center gap-1 px-4 py-2.5 rounded-lg text-sm font-bold"
                 style={{ background: 'var(--accent)', color: 'var(--bg)' }}
               >
                 사건 목록으로 <ArrowRight size={14} />

@@ -299,3 +299,46 @@ summary:focus-visible,
 [role="dialog"]:focus-visible {
   outline: none;
 }
+
+/* 랭크 공개 연출 (P2-D) */
+.rank-reveal {
+  animation: rank-pop 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+.rank-reveal-icon {
+  animation: rank-fade 420ms ease-out both;
+}
+.rank-reveal-sub {
+  animation: rank-fade 420ms ease-out 260ms both;
+}
+
+/* S랭크만 한 번 더 반짝인다. */
+.rank-reveal-s {
+  animation:
+    rank-pop 520ms cubic-bezier(0.2, 1.4, 0.4, 1) both,
+    rank-shine 1.6s ease-in-out 520ms 2;
+}
+
+@keyframes rank-pop {
+  0%   { opacity: 0; transform: scale(0.55); }
+  70%  { opacity: 1; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes rank-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rank-shine {
+  0%, 100% { text-shadow: none; }
+  50%      { text-shadow: 0 0 24px var(--accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rank-reveal,
+  .rank-reveal-s,
+  .rank-reveal-icon,
+  .rank-reveal-sub {
+    animation: none;
+  }
+}
