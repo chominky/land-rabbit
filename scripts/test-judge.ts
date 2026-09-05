@@ -2,6 +2,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
+ * 골든셋 회귀 테스트.
+ *
+ * 실행 로직은 서버의 /api/admin/cases/[id]/golden/run 하나뿐이다.
+ * 이 스크립트는 그 결과를 사람이 읽게 출력할 뿐이라, 관리자 화면과
+ * 항상 같은 결과를 본다.
+ */
+
+/**
  * tsx 스크립트는 Next와 달리 .env를 자동으로 읽지 않는다.
  * 의존성을 늘리지 않으려고 필요한 키만 직접 읽는다.
  */
@@ -22,16 +30,26 @@ function loadEnvFile() {
 loadEnvFile();
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+const CASE_ID = process.env.GOLDEN_CASE_ID || '_test-turtle-soup';
 
-type GoldenTest = {
+type RunResult = {
   question: string;
   expected: string;
+  actual: string;
+  pass: boolean;
 };
 
-/**
- * /api/admin/* 는 관리자 세션을 요구한다. 스크립트도 사람과 똑같이
- * 로그인해서 쿠키를 받아 쓴다.
- */
+type RunSummary = {
+  total: number;
+  passed: number;
+  failed: number;
+  rate: number;
+  threshold: number;
+  ok: boolean;
+  results: RunResult[];
+};
+
+/** /api/admin/* 는 관리자 세션을 요구한다. 사람과 똑같이 로그인해서 쿠키를 쓴다. */
 async function login(): Promise<string> {
   const password = process.env.ADMIN_PASSWORD;
   if (!password) {
@@ -50,8 +68,7 @@ async function login(): Promise<string> {
     process.exit(1);
   }
 
-  const setCookie = res.headers.get('set-cookie');
-  const token = setCookie?.match(/admin_session=([^;]+)/)?.[1];
+  const token = res.headers.get('set-cookie')?.match(/admin_session=([^;]+)/)?.[1];
   if (!token) {
     console.error('세션 쿠키를 받지 못했습니다.');
     process.exit(1);
@@ -62,71 +79,37 @@ async function login(): Promise<string> {
 async function runGoldenTests() {
   const cookie = await login();
 
-  const testFile = path.join(
-    __dirname,
-    '..',
-    'tests',
-    'golden',
-    '_test-turtle-soup.json'
-  );
-  const tests: GoldenTest[] = JSON.parse(fs.readFileSync(testFile, 'utf-8'));
+  const res = await fetch(`${BASE_URL}/api/admin/cases/${CASE_ID}/golden/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Cookie: cookie },
+  });
 
-  let passed = 0;
-  let failed = 0;
-  const results: { question: string; expected: string; actual: string; pass: boolean }[] = [];
-
-  for (const test of tests) {
-    try {
-      const res = await fetch(`${BASE_URL}/api/admin/cases/_test-turtle-soup/test`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Cookie: cookie },
-        body: JSON.stringify({ type: 'judge', input: test.question }),
-      });
-      const data = await res.json();
-      const actual = data.verdict || 'ERROR';
-
-      // MAYBE matches: MAYBE is also acceptable for items expected as MAYBE
-      let pass: boolean;
-      if (test.expected === 'MAYBE') {
-        pass = ['MAYBE', 'YES', 'NO'].includes(actual);
-        // Actually, MAYBE items: YES/NO is failure, only MAYBE-like is pass
-        pass = actual === 'MAYBE';
-      } else {
-        pass = actual === test.expected;
-      }
-
-      results.push({ question: test.question, expected: test.expected, actual, pass });
-
-      if (pass) {
-        passed++;
-        console.log(`  PASS: "${test.question}" -> ${actual}`);
-      } else {
-        failed++;
-        console.log(`  FAIL: "${test.question}" -> ${actual} (expected: ${test.expected})`);
-      }
-    } catch (err) {
-      failed++;
-      results.push({
-        question: test.question,
-        expected: test.expected,
-        actual: 'ERROR',
-        pass: false,
-      });
-      console.log(`  ERROR: "${test.question}" -> ${err}`);
-    }
-  }
-
-  const total = passed + failed;
-  const rate = Math.round((passed / total) * 100);
-  console.log(`\n=== Results: ${passed}/${total} passed (${rate}%) ===`);
-
-  if (rate < 90) {
-    console.error('FAILED: Pass rate below 90%');
-    console.table(results.filter((r) => !r.pass));
+  if (!res.ok) {
+    const body = await res.text();
+    console.error(`골든셋 실행 실패 (${res.status}): ${body.slice(0, 200)}`);
     process.exit(1);
-  } else {
-    console.log('PASSED: All golden tests within threshold');
   }
+
+  const summary: RunSummary = await res.json();
+
+  for (const r of summary.results) {
+    const mark = r.pass ? 'PASS' : 'FAIL';
+    const detail = r.pass ? r.actual : `${r.actual} (expected: ${r.expected})`;
+    console.log(`  ${mark}: "${r.question}" -> ${detail}`);
+  }
+
+  console.log(`\n=== Results: ${summary.passed}/${summary.total} passed (${summary.rate}%) ===`);
+
+  if (!summary.ok) {
+    console.error(`FAILED: Pass rate below ${summary.threshold}%`);
+    console.table(summary.results.filter((r) => !r.pass));
+    process.exit(1);
+  }
+
+  console.log('PASSED: All golden tests within threshold');
 }
 
-runGoldenTests().catch(console.error);
+runGoldenTests().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { Play, Plus, Trash2, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Play, Plus, Trash2, CheckCircle, XCircle, Loader2, AlertTriangle } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -27,6 +27,16 @@ type GoldenTest = {
   question: string;
   expected_verdict: Verdict;
   created_at: string;
+};
+
+type RunSummary = {
+  total: number;
+  passed: number;
+  failed: number;
+  rate: number;
+  threshold: number;
+  ok: boolean;
+  results: { id: string; question: string; expected: Verdict; actual: string; comment?: string; pass: boolean }[];
 };
 
 type GoldenTestWithResult = GoldenTest & {
@@ -127,7 +137,9 @@ export default function CaseTestPage() {
   const [newQuestion, setNewQuestion] = useState('');
   const [newExpected, setNewExpected] = useState<Verdict>('YES');
   const [addingGolden, setAddingGolden] = useState(false);
+  const [goldenError, setGoldenError] = useState('');
   const [runningAll, setRunningAll] = useState(false);
+  const [runSummary, setRunSummary] = useState<RunSummary | null>(null);
 
   useEffect(() => {
     fetchGoldenTests();
@@ -202,7 +214,7 @@ export default function CaseTestPage() {
       setNewQuestion('');
       setNewExpected('YES');
     } catch (err) {
-      alert(String(err));
+      setGoldenError(String(err));
     } finally {
       setAddingGolden(false);
     }
@@ -214,7 +226,7 @@ export default function CaseTestPage() {
       await fetch(`/api/admin/cases/${caseId}/golden?testId=${testId}`, { method: 'DELETE' });
       setGoldenTests((prev) => prev.filter((t) => t.id !== testId));
     } catch {
-      alert('삭제 실패');
+      setGoldenError('골든 케이스를 삭제하지 못했습니다.');
     }
   }
 
@@ -240,12 +252,42 @@ export default function CaseTestPage() {
     }
   }
 
+  /**
+   * 전체 실행은 서버의 golden/run을 부른다.
+   * `npm run test:judge`도 같은 엔드포인트를 쓰므로 CLI와 결과가 일치한다.
+   */
   async function runAllGolden() {
     setRunningAll(true);
-    for (const test of goldenTests) {
-      await runSingleGolden(test);
+    setRunSummary(null);
+    try {
+      const res = await fetch(`/api/admin/cases/${caseId}/golden/run`, { method: 'POST' });
+      if (!res.ok) throw new Error();
+      const summary: RunSummary = await res.json();
+      setRunSummary(summary);
+      const byId = new Map(summary.results.map((r) => [r.id, r]));
+      setGoldenTests((prev) =>
+        prev.map((t) => {
+          const r = byId.get(t.id);
+          if (!r) return t;
+          return { ...t, running: false, actual: r.actual as Verdict, comment: r.comment, passed: r.pass };
+        })
+      );
+    } catch {
+      setRunSummary(null);
+    } finally {
+      setRunningAll(false);
     }
-    setRunningAll(false);
+  }
+
+  async function changeExpected(testId: string, expected: Verdict) {
+    setGoldenTests((prev) =>
+      prev.map((t) => (t.id === testId ? { ...t, expected_verdict: expected, passed: undefined, actual: undefined } : t))
+    );
+    await fetch(`/api/admin/cases/${caseId}/golden`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testId, expected_verdict: expected }),
+    });
   }
 
   const passCount = goldenTests.filter((t) => t.passed === true).length;
@@ -443,17 +485,45 @@ export default function CaseTestPage() {
           </div>
         </div>
 
+        {goldenError && (
+          <div
+            style={{
+              background: 'var(--danger-surface)', border: '1px solid var(--no)',
+              color: 'var(--danger-fg)', borderRadius: '5px',
+              padding: '8px 12px', fontSize: '12px', marginBottom: '12px',
+            }}
+          >
+            {goldenError}
+          </div>
+        )}
+
         {/* Run all */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
-            총 {goldenTests.length}개
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '13px', color: 'var(--muted)' }}>
+            <span>총 {goldenTests.length}개</span>
             {(passCount > 0 || failCount > 0) && (
               <>
-                &nbsp;&nbsp;
                 <span style={{ color: 'var(--success)' }}>{passCount} Pass</span>
-                &nbsp;&nbsp;
                 <span style={{ color: 'var(--danger-fg)' }}>{failCount} Fail</span>
               </>
+            )}
+            {runSummary && (
+              <span
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  padding: '3px 10px', borderRadius: '999px', fontWeight: 700, fontSize: '12px',
+                  background: runSummary.ok
+                    ? 'color-mix(in srgb, var(--success) 14%, transparent)'
+                    : 'color-mix(in srgb, var(--danger) 16%, transparent)',
+                  border: `1px solid ${runSummary.ok ? 'color-mix(in srgb, var(--success) 35%, transparent)' : 'color-mix(in srgb, var(--danger) 40%, transparent)'}`,
+                  color: runSummary.ok ? 'var(--success)' : 'var(--danger-fg)',
+                }}
+                title={`기준 ${runSummary.threshold}% 이상`}
+              >
+                {runSummary.ok ? <CheckCircle size={12} /> : <AlertTriangle size={12} />}
+                통과율 {runSummary.rate}%
+                {!runSummary.ok && ` · 기준 ${runSummary.threshold}% 미달`}
+              </span>
             )}
           </div>
           <button
@@ -505,7 +575,21 @@ export default function CaseTestPage() {
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                       <span style={{ color: 'var(--dim)', fontSize: '11px' }}>Expected:</span>
-                      <VerdictBadge verdict={test.expected_verdict} />
+                      <select
+                        value={test.expected_verdict}
+                        onChange={(e) => changeExpected(test.id, e.target.value as Verdict)}
+                        aria-label="기대 판정"
+                        style={{
+                          background: 'var(--surface)', border: '1px solid var(--border)',
+                          color: VERDICT_COLORS[test.expected_verdict] ?? 'var(--fg)',
+                          borderRadius: '4px', padding: '2px 6px', fontSize: '11px',
+                          fontFamily: 'monospace', cursor: 'pointer',
+                        }}
+                      >
+                        {(['YES', 'NO', 'MAYBE', 'IRRELEVANT', 'INVALID'] as Verdict[]).map((v) => (
+                          <option key={v} value={v}>{v}</option>
+                        ))}
+                      </select>
                       {test.actual && (
                         <>
                           <span style={{ color: 'var(--dim)', fontSize: '11px' }}>Actual:</span>
