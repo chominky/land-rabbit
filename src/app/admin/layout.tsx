@@ -25,15 +25,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   // Don't show sidebar on login page
   if (pathname === '/admin/login') {
-    return <>{children}</>;
+    return <div data-scope="admin">{children}</div>;
   }
 
   return (
     <div
+      data-scope="admin"
       style={{
         display: 'flex',
         minHeight: '100vh',
-        background: '#0b0d11',
+        background: 'var(--bg)',
         fontFamily: 'monospace',
       }}
     >
@@ -41,8 +42,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside
         style={{
           width: '220px',
-          background: '#12151c',
-          borderRight: '1px solid #2a2e38',
+          background: 'var(--surface)',
+          borderRight: '1px solid var(--border)',
           display: 'flex',
           flexDirection: 'column',
           flexShrink: 0,
@@ -52,16 +53,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div
           style={{
             padding: '24px 20px',
-            borderBottom: '1px solid #2a2e38',
+            borderBottom: '1px solid var(--border)',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Shield size={18} color="#c8a24e" />
-            <span style={{ color: '#c8a24e', fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em' }}>
+            <Shield size={18} color="var(--accent)" />
+            <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: '14px', letterSpacing: '0.05em' }}>
               ADMIN
             </span>
           </div>
-          <div style={{ color: '#5a6070', fontSize: '11px', marginTop: '4px', paddingLeft: '28px' }}>
+          <div style={{ color: 'var(--dim)', fontSize: '11px', marginTop: '4px', paddingLeft: '28px' }}>
             육지토끼고기
           </div>
         </div>
@@ -79,9 +80,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   alignItems: 'center',
                   gap: '10px',
                   padding: '10px 20px',
-                  color: active ? '#c8a24e' : '#8b92a0',
-                  background: active ? 'rgba(200, 162, 78, 0.08)' : 'transparent',
-                  borderLeft: active ? '2px solid #c8a24e' : '2px solid transparent',
+                  color: active ? 'var(--accent)' : 'var(--muted)',
+                  background: active ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'transparent',
+                  borderLeft: active ? '2px solid var(--accent)' : '2px solid transparent',
                   textDecoration: 'none',
                   fontSize: '13px',
                   fontWeight: active ? 600 : 400,
@@ -96,7 +97,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* Logout */}
-        <div style={{ padding: '12px 0', borderTop: '1px solid #2a2e38' }}>
+        <div style={{ padding: '12px 0', borderTop: '1px solid var(--border)' }}>
           <button
             onClick={handleLogout}
             style={{
@@ -104,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               alignItems: 'center',
               gap: '10px',
               padding: '10px 20px',
-              color: '#5a6070',
+              color: 'var(--dim)',
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',

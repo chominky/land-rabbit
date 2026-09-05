@@ -67,7 +67,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{
-        color: '#5a6070',
+        color: 'var(--dim)',
         fontSize: '11px',
         fontWeight: 600,
         letterSpacing: '0.08em',
@@ -91,11 +91,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#0b0d11',
-  border: '1px solid #2a2e38',
+  background: 'var(--bg)',
+  border: '1px solid var(--border)',
   borderRadius: '4px',
   padding: '9px 12px',
-  color: '#e8eaf0',
+  color: 'var(--fg)',
   fontSize: '13px',
   outline: 'none',
   boxSizing: 'border-box',
@@ -160,8 +160,8 @@ function KeyFactRow({
   return (
     <div
       style={{
-        background: '#0f1219',
-        border: '1px solid #2a2e38',
+        background: 'var(--bg-deep)',
+        border: '1px solid var(--border)',
         borderRadius: '6px',
         padding: '16px',
         marginBottom: '12px',
@@ -169,11 +169,11 @@ function KeyFactRow({
     >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-        <GripVertical size={14} color="#3a3e4a" style={{ cursor: 'grab' }} />
+        <GripVertical size={14} color="var(--border-strong)" style={{ cursor: 'grab' }} />
         <span
           style={{
-            background: 'rgba(200,162,78,0.12)',
-            color: '#c8a24e',
+            background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
+            color: 'var(--accent)',
             fontSize: '11px',
             fontWeight: 700,
             padding: '2px 8px',
@@ -183,32 +183,32 @@ function KeyFactRow({
           #{index + 1}
         </span>
         <div style={{ flex: 1 }} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', color: '#8b92a0', fontSize: '12px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', color: 'var(--muted)', fontSize: '12px' }}>
           <input
             type="checkbox"
             checked={kf.required}
             onChange={(e) => set('required', e.target.checked)}
-            style={{ accentColor: '#c8a24e' }}
+            style={{ accentColor: 'var(--accent)' }}
           />
           Required
         </label>
         <button
           onClick={() => onMove(-1)}
           disabled={index === 0}
-          style={{ background: 'none', border: 'none', cursor: index === 0 ? 'not-allowed' : 'pointer', color: '#5a6070', padding: '2px' }}
+          style={{ background: 'none', border: 'none', cursor: index === 0 ? 'not-allowed' : 'pointer', color: 'var(--dim)', padding: '2px' }}
         >
           <ChevronUp size={14} />
         </button>
         <button
           onClick={() => onMove(1)}
           disabled={index === total - 1}
-          style={{ background: 'none', border: 'none', cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: '#5a6070', padding: '2px' }}
+          style={{ background: 'none', border: 'none', cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: 'var(--dim)', padding: '2px' }}
         >
           <ChevronDown size={14} />
         </button>
         <button
           onClick={onRemove}
-          style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: '#f87171', padding: '4px 6px', borderRadius: '4px' }}
+          style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: 'var(--danger-fg)', padding: '4px 6px', borderRadius: '4px' }}
         >
           <Trash2 size={12} />
         </button>
@@ -236,7 +236,7 @@ function KeyFactRow({
           <SectionLabel>acceptExamples</SectionLabel>
           <button
             onClick={addAccept}
-            style={{ background: 'rgba(34,197,94,0.08)', border: 'none', cursor: 'pointer', color: '#4ade80', padding: '3px 7px', borderRadius: '3px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}
+            style={{ background: 'rgba(34,197,94,0.08)', border: 'none', cursor: 'pointer', color: 'var(--success)', padding: '3px 7px', borderRadius: '3px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}
           >
             <Plus size={11} /> Add
           </button>
@@ -246,7 +246,7 @@ function KeyFactRow({
             <input style={{ ...inputStyle, flex: 1 }} value={ex} onChange={(e) => setAccept(i, e.target.value)} placeholder={`Accept example ${i + 1}`} />
             <button
               onClick={() => removeAccept(i)}
-              style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: '#f87171', padding: '4px 6px', borderRadius: '4px' }}
+              style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: 'var(--danger-fg)', padding: '4px 6px', borderRadius: '4px' }}
             >
               <Trash2 size={11} />
             </button>
@@ -260,7 +260,7 @@ function KeyFactRow({
           <SectionLabel>rejectExamples</SectionLabel>
           <button
             onClick={addReject}
-            style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: '#f87171', padding: '3px 7px', borderRadius: '3px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}
+            style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: 'var(--danger-fg)', padding: '3px 7px', borderRadius: '3px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '3px' }}
           >
             <Plus size={11} /> Add
           </button>
@@ -270,7 +270,7 @@ function KeyFactRow({
             <input style={{ ...inputStyle, flex: 1 }} value={ex} onChange={(e) => setReject(i, e.target.value)} placeholder={`Reject example ${i + 1}`} />
             <button
               onClick={() => removeReject(i)}
-              style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: '#f87171', padding: '4px 6px', borderRadius: '4px' }}
+              style={{ background: 'rgba(220,38,38,0.08)', border: 'none', cursor: 'pointer', color: 'var(--danger-fg)', padding: '4px 6px', borderRadius: '4px' }}
             >
               <Trash2 size={11} />
             </button>
@@ -288,32 +288,32 @@ function PreviewPanel({ form }: { form: CaseForm }) {
   return (
     <div
       style={{
-        background: '#0f1219',
-        border: '1px solid #2a2e38',
+        background: 'var(--bg-deep)',
+        border: '1px solid var(--border)',
         borderRadius: '8px',
         padding: '24px',
         position: 'sticky',
         top: '24px',
       }}
     >
-      <div style={{ color: '#c8a24e', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '16px' }}>
+      <div style={{ color: 'var(--accent)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '16px' }}>
         PLAYER PREVIEW
       </div>
 
-      <div style={{ color: '#c8a24e', fontSize: '16px', fontWeight: 700, marginBottom: '6px' }}>
+      <div style={{ color: 'var(--accent)', fontSize: '16px', fontWeight: 700, marginBottom: '6px' }}>
         {form.title || '제목 없음'}
       </div>
-      <div style={{ color: '#8b92a0', fontSize: '13px', marginBottom: '12px' }}>
+      <div style={{ color: 'var(--muted)', fontSize: '13px', marginBottom: '12px' }}>
         {stars} &nbsp; Difficulty {form.difficulty}
       </div>
 
-      <div style={{ color: '#8b92a0', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px', borderBottom: '1px solid #2a2e38', paddingBottom: '16px' }}>
+      <div style={{ color: 'var(--muted)', fontSize: '13px', lineHeight: '1.6', marginBottom: '16px', borderBottom: '1px solid var(--border)', paddingBottom: '16px' }}>
         {form.brief || '브리핑 없음'}
       </div>
 
       {form.keyFacts.length > 0 && (
         <div>
-          <div style={{ color: '#5a6070', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '8px' }}>
+          <div style={{ color: 'var(--dim)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', marginBottom: '8px' }}>
             KEY FACTS ({form.keyFacts.length})
           </div>
           {form.keyFacts.map((kf, i) => (
@@ -324,13 +324,13 @@ function PreviewPanel({ form }: { form: CaseForm }) {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '6px 0',
-                borderBottom: i < form.keyFacts.length - 1 ? '1px solid #1e2230' : 'none',
+                borderBottom: i < form.keyFacts.length - 1 ? '1px solid var(--surface-3)' : 'none',
               }}
             >
-              <span style={{ color: '#2a2e38', fontSize: '12px' }}>○</span>
-              <span style={{ color: '#8b92a0', fontSize: '12px', flex: 1 }}>{kf.label || `Fact #${i + 1}`}</span>
+              <span style={{ color: 'var(--border)', fontSize: '12px' }}>○</span>
+              <span style={{ color: 'var(--muted)', fontSize: '12px', flex: 1 }}>{kf.label || `Fact #${i + 1}`}</span>
               {kf.required && (
-                <span style={{ color: '#c8a24e', fontSize: '10px', fontWeight: 700 }}>REQ</span>
+                <span style={{ color: 'var(--accent)', fontSize: '10px', fontWeight: 700 }}>REQ</span>
               )}
             </div>
           ))}
@@ -524,18 +524,18 @@ export default function CaseEditorPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: '40px', color: '#5a6070', fontFamily: 'monospace' }}>
+      <div style={{ padding: '40px', color: 'var(--dim)', fontFamily: 'monospace' }}>
         불러오는 중...
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '32px', color: '#e8eaf0', fontFamily: 'monospace' }}>
+    <div style={{ padding: '32px', color: 'var(--fg)', fontFamily: 'monospace' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
-          <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#c8a24e', margin: 0 }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--accent)', margin: 0 }}>
             {isNew ? 'New Case' : `Edit: ${form.id}`}
           </h1>
         </div>
@@ -543,26 +543,26 @@ export default function CaseEditorPage() {
           <input ref={importRef} type="file" accept=".json" onChange={importJSON} style={{ display: 'none' }} />
           <button
             onClick={() => importRef.current?.click()}
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#1a1e28', border: '1px solid #2a2e38', color: '#8b92a0', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--muted)', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
           >
             <Upload size={13} /> Import JSON
           </button>
           <button
             onClick={exportJSON}
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: '#1a1e28', border: '1px solid #2a2e38', color: '#8b92a0', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--muted)', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
           >
             <Download size={13} /> Export JSON
           </button>
           <button
             onClick={checkPublish}
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', color: '#4ade80', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', color: 'var(--success)', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
           >
             Check Publish
           </button>
           <button
             onClick={save}
             disabled={saving}
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: saving ? '#5a4820' : '#c8a24e', color: saving ? '#8b7040' : '#0b0d11', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 700 }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: saving ? 'var(--accent-deep)' : 'var(--accent)', color: saving ? 'var(--accent-mid)' : 'var(--bg)', border: 'none', padding: '8px 16px', borderRadius: '5px', cursor: saving ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 700 }}
           >
             <Save size={13} /> {saving ? '저장 중...' : '저장'}
           </button>
@@ -571,16 +571,16 @@ export default function CaseEditorPage() {
 
       {/* Errors */}
       {saveError && (
-        <div style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '6px', padding: '12px 16px', color: '#f87171', fontSize: '13px', marginBottom: '20px' }}>
+        <div style={{ background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '6px', padding: '12px 16px', color: 'var(--danger-fg)', fontSize: '13px', marginBottom: '20px' }}>
           {saveError}
         </div>
       )}
 
       {publishErrors.length > 0 && (
         <div style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
-          <div style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Publish 조건 미충족:</div>
+          <div style={{ color: 'var(--warning)', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Publish 조건 미충족:</div>
           {publishErrors.map((e) => (
-            <div key={e} style={{ color: '#fbbf24', fontSize: '12px', marginBottom: '3px' }}>• {e}</div>
+            <div key={e} style={{ color: 'var(--warning)', fontSize: '12px', marginBottom: '3px' }}>• {e}</div>
           ))}
         </div>
       )}
@@ -590,8 +590,8 @@ export default function CaseEditorPage() {
         {/* LEFT: Form */}
         <div>
           {/* Basic */}
-          <div style={{ background: '#12151c', border: '1px solid #2a2e38', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
-            <div style={{ color: '#c8a24e', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '18px' }}>BASIC INFO</div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
+            <div style={{ color: 'var(--accent)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '18px' }}>BASIC INFO</div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '12px', marginBottom: '18px' }}>
               <Field label="ID (slug)">
@@ -624,24 +624,24 @@ export default function CaseEditorPage() {
 
             <Field label={`Brief (${form.brief.length}/${BRIEF_MAX})`}>
               <textarea
-                style={{ ...textareaStyle, minHeight: '90px', borderColor: form.brief.length > BRIEF_MAX ? '#f87171' : '#2a2e38' }}
+                style={{ ...textareaStyle, minHeight: '90px', borderColor: form.brief.length > BRIEF_MAX ? 'var(--danger-fg)' : 'var(--border)' }}
                 value={form.brief}
                 onChange={(e) => set('brief', e.target.value)}
                 placeholder="플레이어에게 공개되는 사건 브리핑..."
               />
               {form.brief.length > BRIEF_MAX && (
-                <div style={{ color: '#f87171', fontSize: '11px', marginTop: '4px' }}>글자 수 초과</div>
+                <div style={{ color: 'var(--danger-fg)', fontSize: '11px', marginTop: '4px' }}>글자 수 초과</div>
               )}
             </Field>
           </div>
 
           {/* Truth */}
-          <div style={{ background: '#12151c', border: '1px solid #2a2e38', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-              <div style={{ color: '#c8a24e', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em' }}>TRUTH</div>
+              <div style={{ color: 'var(--accent)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em' }}>TRUTH</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', borderRadius: '4px', padding: '3px 8px' }}>
-                <AlertTriangle size={11} color="#f87171" />
-                <span style={{ color: '#f87171', fontSize: '11px', fontWeight: 600 }}>이 내용은 플레이어에게 절대 노출되지 않습니다</span>
+                <AlertTriangle size={11} color="var(--danger-fg)" />
+                <span style={{ color: 'var(--danger-fg)', fontSize: '11px', fontWeight: 600 }}>이 내용은 플레이어에게 절대 노출되지 않습니다</span>
               </div>
             </div>
             <textarea
@@ -653,21 +653,21 @@ export default function CaseEditorPage() {
           </div>
 
           {/* Key Facts */}
-          <div style={{ background: '#12151c', border: '1px solid #2a2e38', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <div style={{ color: '#c8a24e', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em' }}>
+              <div style={{ color: 'var(--accent)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em' }}>
                 KEY FACTS ({form.keyFacts.length})
               </div>
               <button
                 onClick={addKeyFact}
-                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(200,162,78,0.1)', border: '1px solid rgba(200,162,78,0.2)', color: '#c8a24e', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'color-mix(in srgb, var(--accent) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)', color: 'var(--accent)', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px' }}
               >
                 <Plus size={12} /> Add Fact
               </button>
             </div>
 
             {form.keyFacts.length === 0 && (
-              <div style={{ color: '#5a6070', fontSize: '13px', textAlign: 'center', padding: '20px' }}>
+              <div style={{ color: 'var(--dim)', fontSize: '13px', textAlign: 'center', padding: '20px' }}>
                 키 팩트가 없습니다. Add Fact를 눌러 추가하세요.
               </div>
             )}
@@ -686,8 +686,8 @@ export default function CaseEditorPage() {
           </div>
 
           {/* Hints */}
-          <div style={{ background: '#12151c', border: '1px solid #2a2e38', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
-            <div style={{ color: '#c8a24e', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '16px' }}>HINTS</div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', marginBottom: '16px' }}>
+            <div style={{ color: 'var(--accent)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '16px' }}>HINTS</div>
             {([0, 1, 2] as const).map((i) => (
               <Field key={i} label={`Hint ${i + 1}`}>
                 <input
@@ -701,8 +701,8 @@ export default function CaseEditorPage() {
           </div>
 
           {/* Red Herrings + Images */}
-          <div style={{ background: '#12151c', border: '1px solid #2a2e38', borderRadius: '8px', padding: '24px' }}>
-            <div style={{ color: '#c8a24e', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '16px' }}>RED HERRINGS & IMAGES</div>
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px' }}>
+            <div style={{ color: 'var(--accent)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '16px' }}>RED HERRINGS & IMAGES</div>
 
             <Field label="Red Herrings (one per line)">
               <textarea
@@ -720,7 +720,7 @@ export default function CaseEditorPage() {
                 onChange={(e) => set('images', e.target.value)}
                 placeholder={`cases/my-case/image1.jpg\ncases/my-case/image2.jpg`}
               />
-              <div style={{ color: '#5a6070', fontSize: '11px', marginTop: '4px' }}>
+              <div style={{ color: 'var(--dim)', fontSize: '11px', marginTop: '4px' }}>
                 현재 {form.images.split('\n').filter((s) => s.trim()).length}개
               </div>
             </Field>

@@ -7,17 +7,18 @@ import {
 } from 'lucide-react';
 import { CasePublicDTO, RoomMode } from '@/lib/types';
 import { MAX_QUESTION_LENGTH } from '@/lib/gameConfig';
+import { T, alpha } from '@/lib/theme';
 
 void MAX_QUESTION_LENGTH; // imported for potential future use
 
-const BG = '#0b0d11';
-const CARD = '#12151c';
-const CARD2 = '#181c25';
-const BORDER = '#2a2e38';
-const AMBER = '#c8a24e';
-const MUTED = '#8b8d93';
-const DIM = '#5a5c63';
-const TEXT = '#e8e6e3';
+const BG = T.bg;
+const CARD = T.surface;
+const CARD2 = T.surface2;
+const BORDER = T.border;
+const AMBER = T.accent;
+const MUTED = T.muted;
+const DIM = T.dim;
+const TEXT = T.fg;
 
 function DifficultyStars({ level }: { level: 1 | 2 | 3 | 4 | 5 }) {
   return (
@@ -153,7 +154,7 @@ export default function RoomCreatePage() {
               {casesError && (
                 <div
                   className="flex items-center gap-2 px-3 py-3 rounded-lg border text-sm"
-                  style={{ background: '#1a0d0d', borderColor: '#8b3a3a', color: '#e07070' }}
+                  style={{ background: 'var(--danger-surface)', borderColor: 'var(--no)', color: 'var(--danger-soft)' }}
                 >
                   <AlertCircle size={14} />
                   {casesError}
@@ -234,7 +235,7 @@ export default function RoomCreatePage() {
                   onClick={() => setMode('coop')}
                   className="flex flex-col items-center gap-2 px-4 py-4 rounded-lg border transition-all"
                   style={{
-                    background: mode === 'coop' ? `${AMBER}14` : CARD2,
+                    background: mode === 'coop' ? alpha(AMBER, 0.08) : CARD2,
                     borderColor: mode === 'coop' ? AMBER : BORDER,
                     color: mode === 'coop' ? AMBER : MUTED,
                   }}
@@ -242,7 +243,7 @@ export default function RoomCreatePage() {
                   <Users size={22} />
                   <div className="text-center">
                     <div className="text-sm font-bold">협동</div>
-                    <div className="text-[10px] mt-0.5" style={{ color: mode === 'coop' ? `${AMBER}aa` : DIM }}>
+                    <div className="text-[10px] mt-0.5" style={{ color: mode === 'coop' ? alpha(AMBER, 0.67) : DIM }}>
                       함께 추리하기
                     </div>
                   </div>
@@ -262,7 +263,7 @@ export default function RoomCreatePage() {
                   onClick={() => setMode('versus')}
                   className="flex flex-col items-center gap-2 px-4 py-4 rounded-lg border transition-all"
                   style={{
-                    background: mode === 'versus' ? `${AMBER}14` : CARD2,
+                    background: mode === 'versus' ? alpha(AMBER, 0.08) : CARD2,
                     borderColor: mode === 'versus' ? AMBER : BORDER,
                     color: mode === 'versus' ? AMBER : MUTED,
                   }}
@@ -270,7 +271,7 @@ export default function RoomCreatePage() {
                   <Swords size={22} />
                   <div className="text-center">
                     <div className="text-sm font-bold">대결</div>
-                    <div className="text-[10px] mt-0.5" style={{ color: mode === 'versus' ? `${AMBER}aa` : DIM }}>
+                    <div className="text-[10px] mt-0.5" style={{ color: mode === 'versus' ? alpha(AMBER, 0.67) : DIM }}>
                       각자 추리 경쟁
                     </div>
                   </div>
@@ -301,7 +302,7 @@ export default function RoomCreatePage() {
             {error && (
               <div
                 className="flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm"
-                style={{ background: '#1a0d0d', borderColor: '#8b3a3a', color: '#e07070' }}
+                style={{ background: 'var(--danger-surface)', borderColor: 'var(--no)', color: 'var(--danger-soft)' }}
               >
                 <AlertCircle size={14} className="shrink-0" />
                 {error}

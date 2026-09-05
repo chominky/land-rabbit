@@ -17,26 +17,21 @@ import {
 import {
   Room, RoomPlayer, RoomQuestion, RoomEvent, CasePublicDTO, Verdict,
 } from '@/lib/types';
+import { T, alpha, VERDICT_TOKEN } from '@/lib/theme';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG     = '#0b0d11';
-const CARD   = '#12151c';
-const CARD2  = '#181c25';
-const BORDER = '#2a2e38';
-const AMBER  = '#c8a24e';
-const MUTED  = '#8b8d93';
-const DIM    = '#5a5c63';
-const TEXT   = '#e8e6e3';
-const DANGER = '#c0392b';
+const BG     = T.bg;
+const CARD   = T.surface;
+const CARD2  = T.surface2;
+const BORDER = T.border;
+const AMBER  = T.accent;
+const MUTED  = T.muted;
+const DIM    = T.dim;
+const TEXT   = T.fg;
+const DANGER = T.danger;
 
 // ── Verdict display ────────────────────────────────────────────────────────────
-const VERDICT_BG: Record<Verdict, string> = {
-  YES:       '#3a7d44',
-  NO:        '#8b3a3a',
-  MAYBE:     '#8b7a3a',
-  IRRELEVANT:'#4a4c53',
-  INVALID:   '#4a4c53',
-};
+const VERDICT_BG: Record<Verdict, string> = VERDICT_TOKEN;
 const VERDICT_LABEL: Record<Verdict, string> = {
   YES: '예', NO: '아니오', MAYBE: '그럴 수도', IRRELEVANT: '무관', INVALID: '무효',
 };
@@ -82,7 +77,7 @@ function PlayerRow({ p, isMe, isHost, isTurn }: {
       className="flex items-center gap-2 px-3 py-2 rounded-lg border"
       style={{
         borderColor: isTurn ? AMBER : BORDER,
-        background: isTurn ? `${AMBER}0d` : CARD2,
+        background: isTurn ? alpha(AMBER, 0.05) : CARD2,
       }}
     >
       {isHost && <Crown size={12} style={{ color: AMBER }} />}
@@ -700,7 +695,7 @@ export default function RoomPage() {
             )}
             <span
               className="text-[10px] px-2 py-0.5 rounded"
-              style={{ background: `${AMBER}22`, color: AMBER }}
+              style={{ background: alpha(AMBER, 0.13), color: AMBER }}
             >
               {room.mode === 'coop' ? '협동' : '대결'}
             </span>
@@ -784,7 +779,7 @@ export default function RoomPage() {
                         ) : (
                           <div
                             className="w-full h-full flex flex-col items-center justify-center gap-1 p-2 text-center"
-                            style={{ background: '#1a1d24' }}
+                            style={{ background: 'var(--surface-inset)' }}
                           >
                             <Eye size={18} style={{ color: DIM }} />
                             <span className="text-[10px]" style={{ color: DIM }}>삽화 {i + 1}</span>
@@ -792,7 +787,7 @@ export default function RoomPage() {
                         )
                       ) : (
                         <div className="locked-slot w-full h-full flex items-center justify-center">
-                          <Lock size={18} style={{ color: '#4a4c53' }} />
+                          <Lock size={18} style={{ color: 'var(--neutral)' }} />
                         </div>
                       )}
                       {i === 0 && (
@@ -876,7 +871,7 @@ export default function RoomPage() {
                     <div
                       key={i}
                       className="px-3 py-2 rounded border text-xs"
-                      style={{ background: `${AMBER}0a`, borderColor: `${AMBER}33`, color: AMBER }}
+                      style={{ background: alpha(AMBER, 0.04), borderColor: alpha(AMBER, 0.20), color: AMBER }}
                     >
                       <Lightbulb size={11} className="inline mr-1" />
                       힌트 {i + 1}: {h}
@@ -911,9 +906,9 @@ export default function RoomPage() {
                           key={f.id}
                           className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5"
                           style={{
-                            background: found ? `${AMBER}22` : BORDER,
+                            background: found ? alpha(AMBER, 0.13) : BORDER,
                             color: found ? AMBER : DIM,
-                            border: `1px solid ${found ? `${AMBER}44` : BORDER}`,
+                            border: `1px solid ${found ? alpha(AMBER, 0.27) : BORDER}`,
                           }}
                         >
                           {found && <Unlock size={8} />}
@@ -1036,7 +1031,7 @@ export default function RoomPage() {
               {isVersus && spectatedPlayer && (
                 <div
                   className="flex items-center justify-between px-3 py-2 rounded-lg border mb-2"
-                  style={{ background: `${AMBER}0d`, borderColor: `${AMBER}33` }}
+                  style={{ background: alpha(AMBER, 0.05), borderColor: alpha(AMBER, 0.20) }}
                 >
                   <div className="flex items-center gap-2">
                     <Eye size={14} style={{ color: AMBER }} />
@@ -1093,7 +1088,7 @@ export default function RoomPage() {
                               <span
                                 key={fid}
                                 className="text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5"
-                                style={{ background: `${AMBER}22`, color: AMBER }}
+                                style={{ background: alpha(AMBER, 0.13), color: AMBER }}
                               >
                                 <Unlock size={8} />핵심 요소 {idx + 1}
                               </span>
@@ -1124,8 +1119,8 @@ export default function RoomPage() {
                     key={ev.id}
                     className="rounded-lg p-3 border"
                     style={{
-                      background: p.solved ? `${AMBER}0d` : `${DANGER}0d`,
-                      borderColor: p.solved ? `${AMBER}44` : `${DANGER}44`,
+                      background: p.solved ? alpha(AMBER, 0.05) : alpha(DANGER, 0.05),
+                      borderColor: p.solved ? alpha(AMBER, 0.27) : alpha(DANGER, 0.27),
                     }}
                   >
                     <div className="flex items-center gap-2 mb-2">
@@ -1306,7 +1301,7 @@ export default function RoomPage() {
         {showFinalModal && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'rgba(0,0,0,0.85)' }}
+            style={{ background: 'var(--scrim)' }}
           >
             <div
               className="w-full max-w-lg rounded-xl border p-6"
@@ -1320,7 +1315,7 @@ export default function RoomPage() {
               </div>
               <div
                 className="flex items-center gap-2 px-3 py-2 mb-4 rounded text-xs"
-                style={{ background: '#8b3a3a22', border: '1px solid #8b3a3a44', color: '#e07070' }}
+                style={{ background: 'color-mix(in srgb, var(--no) 13%, transparent)', border: '1px solid color-mix(in srgb, var(--no) 27%, transparent)', color: 'var(--danger-soft)' }}
               >
                 <AlertTriangle size={12} />
                 오답 시 {COST_WRONG_ANSWER}Q 차감 · {MAX_FINAL_ATTEMPTS - attemptsUsed}회 남음
@@ -1421,7 +1416,7 @@ export default function RoomPage() {
                   key={p.id}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg border"
                   style={{
-                    background: p.id === identity.playerId ? `${AMBER}0d` : CARD2,
+                    background: p.id === identity.playerId ? alpha(AMBER, 0.05) : CARD2,
                     borderColor: p.id === identity.playerId ? AMBER : BORDER,
                   }}
                 >
@@ -1440,7 +1435,7 @@ export default function RoomPage() {
                   {p.rank && (
                     <span
                       className="text-xs px-2 py-0.5 rounded"
-                      style={{ background: `${AMBER}22`, color: AMBER }}
+                      style={{ background: alpha(AMBER, 0.13), color: AMBER }}
                     >
                       {getRank(p.score ?? 0)} · {p.score ?? 0}점
                     </span>
@@ -1466,7 +1461,7 @@ export default function RoomPage() {
           {verdictResult?.truth && (
             <div
               className="rounded-xl border p-5"
-              style={{ background: `${AMBER}08`, borderColor: `${AMBER}33` }}
+              style={{ background: alpha(AMBER, 0.03), borderColor: alpha(AMBER, 0.20) }}
             >
               <h2 className="text-sm font-bold mb-2" style={{ color: AMBER }}>사건 전말</h2>
               <p className="text-sm leading-relaxed" style={{ color: TEXT }}>

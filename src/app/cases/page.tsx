@@ -51,8 +51,8 @@ function DifficultyStars({ level }: { level: 1 | 2 | 3 | 4 | 5 }) {
           size={12}
           className={
             i < level
-              ? 'fill-[#c8a24e] text-[#c8a24e]'
-              : 'fill-transparent text-[#2a2e38]'
+              ? 'fill-accent text-accent'
+              : 'fill-transparent text-border'
           }
         />
       ))}
@@ -62,11 +62,11 @@ function DifficultyStars({ level }: { level: 1 | 2 | 3 | 4 | 5 }) {
 
 function RankBadge({ rank, score }: { rank: string; score: number }) {
   const rankColors: Record<string, string> = {
-    S: 'text-[#c8a24e] border-[#c8a24e] bg-[#c8a24e]/10',
+    S: 'text-accent border-accent bg-accent/10',
     A: 'text-emerald-400 border-emerald-400 bg-emerald-400/10',
     B: 'text-sky-400 border-sky-400 bg-sky-400/10',
     C: 'text-violet-400 border-violet-400 bg-violet-400/10',
-    D: 'text-[#8b8d93] border-[#2a2e38] bg-[#2a2e38]/40',
+    D: 'text-muted border-border bg-border/40',
   };
   const colorClass = rankColors[rank] ?? rankColors['D'];
 
@@ -95,16 +95,16 @@ function CaseCard({
 
   return (
     <div
-      className="group relative flex flex-col w-full text-left rounded-lg border border-[#2a2e38] bg-[#181c25] hover:border-[#c8a24e]/50 hover:bg-[#1e2230] transition-all duration-200 overflow-hidden"
+      className="group relative flex flex-col w-full text-left rounded-lg border border-border bg-surface-2 hover:border-accent/50 hover:bg-surface-3 transition-all duration-200 overflow-hidden"
     >
       {/* Cleared overlay strip */}
       {cleared && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#c8a24e]/0 via-[#c8a24e] to-[#c8a24e]/0" />
+        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-accent/0 via-accent to-accent/0" />
       )}
 
       {/* Thumbnail */}
       {caseData.images?.[0] && (
-        <div className="w-full aspect-[16/9] overflow-hidden bg-[#12151c]">
+        <div className="w-full aspect-[16/9] overflow-hidden bg-surface">
           <img
             src={caseData.images[0]}
             alt={caseData.title}
@@ -116,18 +116,18 @@ function CaseCard({
       <div className="flex flex-col gap-3 p-5">
         {/* Header row */}
         <div className="flex items-start justify-between gap-2">
-          <h2 className="text-sm font-semibold text-[#e8e6e3] leading-snug group-hover:text-[#c8a24e] transition-colors line-clamp-2">
+          <h2 className="text-sm font-semibold text-fg leading-snug group-hover:text-accent transition-colors line-clamp-2">
             {caseData.title}
           </h2>
           {/* Status */}
           {cleared && save?.rank && save?.score !== undefined ? (
             <RankBadge rank={save.rank} score={save.score} />
           ) : inProgress ? (
-            <span className="text-[10px] text-[#c8a24e]/80 border border-[#c8a24e]/30 bg-[#c8a24e]/5 px-2 py-0.5 rounded shrink-0">
+            <span className="text-[10px] text-accent/80 border border-accent/30 bg-accent/5 px-2 py-0.5 rounded shrink-0">
               진행 중
             </span>
           ) : (
-            <span className="text-[10px] text-[#5a5c63] shrink-0">미도전</span>
+            <span className="text-[10px] text-dim shrink-0">미도전</span>
           )}
         </div>
 
@@ -135,7 +135,7 @@ function CaseCard({
         <DifficultyStars level={caseData.difficulty} />
 
         {/* Brief */}
-        <p className="text-xs text-[#8b8d93] leading-relaxed line-clamp-3">
+        <p className="text-xs text-muted leading-relaxed line-clamp-3">
           {caseData.brief}
         </p>
 
@@ -147,7 +147,7 @@ function CaseCard({
                 type="button"
                 onClick={onResume}
                 className="flex-1 py-2 rounded text-xs font-semibold"
-                style={{ background: '#c8a24e', color: '#0b0d11' }}
+                style={{ background: 'var(--accent)', color: 'var(--bg)' }}
               >
                 이어하기
               </button>
@@ -155,7 +155,7 @@ function CaseCard({
                 type="button"
                 onClick={onNewGame}
                 className="py-2 px-3 rounded text-xs border"
-                style={{ borderColor: '#2a2e38', color: '#8b8d93' }}
+                style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
               >
                 새로 시작
               </button>
@@ -165,7 +165,7 @@ function CaseCard({
               type="button"
               onClick={onNewGame}
               className="flex-1 py-2 rounded text-xs font-semibold"
-              style={{ background: '#c8a24e', color: '#0b0d11' }}
+              style={{ background: 'var(--accent)', color: 'var(--bg)' }}
             >
               시작하기
             </button>
@@ -178,17 +178,17 @@ function CaseCard({
 
 function SkeletonCard() {
   return (
-    <div className="rounded-lg border border-[#2a2e38] bg-[#181c25] p-5 flex flex-col gap-3 animate-pulse">
-      <div className="h-4 w-3/4 bg-[#2a2e38] rounded" />
-      <div className="h-3 w-20 bg-[#2a2e38] rounded" />
+    <div className="rounded-lg border border-border bg-surface-2 p-5 flex flex-col gap-3 animate-pulse">
+      <div className="h-4 w-3/4 bg-border rounded" />
+      <div className="h-3 w-20 bg-border rounded" />
       <div className="space-y-1.5">
-        <div className="h-3 w-full bg-[#2a2e38] rounded" />
-        <div className="h-3 w-5/6 bg-[#2a2e38] rounded" />
-        <div className="h-3 w-2/3 bg-[#2a2e38] rounded" />
+        <div className="h-3 w-full bg-border rounded" />
+        <div className="h-3 w-5/6 bg-border rounded" />
+        <div className="h-3 w-2/3 bg-border rounded" />
       </div>
       <div className="flex gap-1.5">
-        <div className="h-4 w-12 bg-[#2a2e38] rounded" />
-        <div className="h-4 w-16 bg-[#2a2e38] rounded" />
+        <div className="h-4 w-12 bg-border rounded" />
+        <div className="h-4 w-16 bg-border rounded" />
       </div>
     </div>
   );
@@ -232,23 +232,23 @@ export default function CasesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0b0d11] flex flex-col">
+    <div className="min-h-screen bg-bg flex flex-col">
       {/* Top bar */}
-      <header className="sticky top-0 z-20 bg-[#0b0d11]/90 backdrop-blur border-b border-[#2a2e38]">
+      <header className="sticky top-0 z-20 bg-bg/90 backdrop-blur border-b border-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-4">
           <button
             type="button"
             onClick={() => router.push('/')}
-            className="flex items-center gap-1.5 text-[#8b8d93] hover:text-[#e8e6e3] transition-colors text-sm"
+            className="flex items-center gap-1.5 text-muted hover:text-fg transition-colors text-sm"
             aria-label="홈으로 돌아가기"
           >
             <ArrowLeft size={16} />
             <span className="hidden sm:inline">홈</span>
           </button>
 
-          <div className="h-4 w-px bg-[#2a2e38]" />
+          <div className="h-4 w-px bg-border" />
 
-          <h1 className="text-sm font-semibold tracking-widest text-[#c8a24e] uppercase">
+          <h1 className="text-sm font-semibold tracking-widest text-accent uppercase">
             사건 기록실
           </h1>
         </div>
@@ -259,7 +259,7 @@ export default function CasesPage() {
         {/* Section heading */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <p className="text-[#5a5c63] text-xs mt-1">
+            <p className="text-dim text-xs mt-1">
               {loading
                 ? '불러오는 중...'
                 : error
@@ -272,8 +272,8 @@ export default function CasesPage() {
         {/* Error state */}
         {error && !loading && (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
-            <FolderOpen size={40} className="text-[#2a2e38]" />
-            <p className="text-[#8b8d93] text-sm">{error}</p>
+            <FolderOpen size={40} className="text-border" />
+            <p className="text-muted text-sm">{error}</p>
             <button
               type="button"
               onClick={() => {
@@ -287,7 +287,7 @@ export default function CasesPage() {
                     setLoading(false);
                   });
               }}
-              className="mt-1 px-4 py-2 text-sm rounded border border-[#2a2e38] text-[#8b8d93] hover:border-[#c8a24e]/50 hover:text-[#c8a24e] transition-colors"
+              className="mt-1 px-4 py-2 text-sm rounded border border-border text-muted hover:border-accent/50 hover:text-accent transition-colors"
             >
               다시 시도
             </button>
@@ -306,8 +306,8 @@ export default function CasesPage() {
         {/* Empty state */}
         {!loading && !error && cases.length === 0 && (
           <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
-            <FolderOpen size={40} className="text-[#2a2e38]" />
-            <p className="text-[#8b8d93] text-sm">등록된 사건이 없습니다.</p>
+            <FolderOpen size={40} className="text-border" />
+            <p className="text-muted text-sm">등록된 사건이 없습니다.</p>
           </div>
         )}
 

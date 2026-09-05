@@ -14,11 +14,11 @@ import {
 import { Verdict, CasePublicDTO, SinglePlayerState } from '@/lib/types';
 
 const VERDICT_COLORS: Record<Verdict, string> = {
-  YES: 'bg-[#3a7d44]',
-  NO: 'bg-[#8b3a3a]',
-  MAYBE: 'bg-[#8b7a3a]',
-  IRRELEVANT: 'bg-[#4a4c53]',
-  INVALID: 'bg-[#4a4c53]',
+  YES: 'bg-yes',
+  NO: 'bg-no',
+  MAYBE: 'bg-maybe',
+  IRRELEVANT: 'bg-neutral',
+  INVALID: 'bg-neutral',
 };
 
 const VERDICT_LABELS: Record<Verdict, string> = {
@@ -280,8 +280,8 @@ export default function PlayPage() {
 
   if (!caseInfo || !state) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0b0d11' }}>
-        <div className="text-[#8b8d93]">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="text-muted">Loading...</div>
       </div>
     );
   }
@@ -296,16 +296,16 @@ export default function PlayPage() {
   const mustFinalSubmit = state.tokens <= 0 && !state.solved && !state.gameOver && state.attemptsUsed < MAX_FINAL_ATTEMPTS;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: '#0b0d11' }}>
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: '#2a2e38', background: '#12151c' }}>
-        <button onClick={() => router.push('/cases')} className="flex items-center gap-1 text-sm" style={{ color: '#8b8d93' }}>
+      <header className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+        <button onClick={() => router.push('/cases')} className="flex items-center gap-1 text-sm" style={{ color: 'var(--muted)' }}>
           <ChevronLeft size={16} /> 사건 목록
         </button>
-        <h1 className="text-sm font-bold tracking-wider" style={{ color: '#c8a24e' }}>
+        <h1 className="text-sm font-bold tracking-wider" style={{ color: 'var(--accent)' }}>
           {caseInfo.title}
         </h1>
-        <div className="text-xs" style={{ color: '#8b8d93' }}>
+        <div className="text-xs" style={{ color: 'var(--muted)' }}>
           {'★'.repeat(caseInfo.difficulty)}{'☆'.repeat(5 - caseInfo.difficulty)}
         </div>
       </header>
@@ -313,7 +313,7 @@ export default function PlayPage() {
       {/* Main content - 2 column */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Left: Case panel */}
-        <div className="lg:w-[420px] flex-shrink-0 overflow-y-auto p-4 border-r" style={{ borderColor: '#2a2e38' }}>
+        <div className="lg:w-[420px] flex-shrink-0 overflow-y-auto p-4 border-r" style={{ borderColor: 'var(--border)' }}>
           {/* Image gallery */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             {Array.from({ length: caseInfo.imageCount }).map((_, i) => {
@@ -323,7 +323,7 @@ export default function PlayPage() {
                 <div
                   key={i}
                   className="aspect-[4/3] rounded-lg overflow-hidden relative cursor-pointer border"
-                  style={{ borderColor: '#2a2e38', background: '#181c25' }}
+                  style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
                   onClick={() => isRevealed && setImageOverlay(i)}
                 >
                   {isRevealed ? (
@@ -334,7 +334,7 @@ export default function PlayPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center p-2 text-center text-xs" style={{ color: '#8b8d93', background: '#1a1d24' }}>
+                      <div className="w-full h-full flex items-center justify-center p-2 text-center text-xs" style={{ color: 'var(--muted)', background: 'var(--surface-inset)' }}>
                         <div>
                           <Eye size={20} className="mx-auto mb-1 opacity-40" />
                           {`삽화 ${i + 1}`}
@@ -343,11 +343,11 @@ export default function PlayPage() {
                     )
                   ) : (
                     <div className="locked-slot w-full h-full flex items-center justify-center">
-                      <Lock size={24} style={{ color: '#4a4c53' }} />
+                      <Lock size={24} style={{ color: 'var(--neutral)' }} />
                     </div>
                   )}
                   {i === 0 && (
-                    <span className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#c8a24e', color: '#0b0d11' }}>
+                    <span className="absolute top-1 left-1 text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'var(--accent)', color: 'var(--bg)' }}>
                       공개
                     </span>
                   )}
@@ -357,19 +357,19 @@ export default function PlayPage() {
           </div>
 
           {/* Brief */}
-          <div className="mb-4 p-3 rounded-lg border" style={{ borderColor: '#2a2e38', background: '#181c25' }}>
-            <p className="text-sm leading-relaxed" style={{ color: '#e8e6e3' }}>
+          <div className="mb-4 p-3 rounded-lg border" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--fg)' }}>
               {caseInfo.brief}
             </p>
           </div>
 
           {/* Tokens */}
-          <div className="mb-4 p-3 rounded-lg border text-center" style={{ borderColor: '#2a2e38', background: '#181c25' }}>
-            <div className="text-xs mb-1" style={{ color: '#8b8d93' }}>남은 질문</div>
-            <div className={`text-3xl font-bold ${isTokensLow ? 'tokens-warning' : ''}`} style={{ color: isTokensLow ? '#c0392b' : '#c8a24e' }}>
+          <div className="mb-4 p-3 rounded-lg border text-center" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
+            <div className="text-xs mb-1" style={{ color: 'var(--muted)' }}>남은 질문</div>
+            <div className={`text-3xl font-bold ${isTokensLow ? 'tokens-warning' : ''}`} style={{ color: isTokensLow ? 'var(--danger)' : 'var(--accent)' }}>
               {state.tokens}
             </div>
-            <div className="text-xs mt-1" style={{ color: '#5a5c63' }}>
+            <div className="text-xs mt-1" style={{ color: 'var(--dim)' }}>
               예상 점수: {expectedScore}
             </div>
           </div>
@@ -380,7 +380,7 @@ export default function PlayPage() {
               onClick={buyHint}
               disabled={state.tokens < COST_HINT || hintsUsed >= 3 || state.solved || state.gameOver}
               className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border text-sm disabled:opacity-30"
-              style={{ borderColor: '#2a2e38', background: '#181c25', color: '#e8e6e3' }}
+              style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--fg)' }}
             >
               <Lightbulb size={14} /> 텍스트 힌트 -{COST_HINT} ({hintsUsed}/3)
             </button>
@@ -392,7 +392,7 @@ export default function PlayPage() {
                 state.solved || state.gameOver
               }
               className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border text-sm disabled:opacity-30"
-              style={{ borderColor: '#2a2e38', background: '#181c25', color: '#e8e6e3' }}
+              style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--fg)' }}
             >
               <Eye size={14} />
               {state.revealedImageCount >= caseInfo.imageCount
@@ -402,20 +402,20 @@ export default function PlayPage() {
           </div>
 
           {/* Next auto unlock */}
-          <div className="text-xs text-center" style={{ color: '#5a5c63' }}>
+          <div className="text-xs text-center" style={{ color: 'var(--dim)' }}>
             다음 자동 공개까지 {questionsUntilNextUnlock}개 질문
           </div>
 
           {/* Key facts progress */}
-          <div className="mt-4 p-3 rounded-lg border" style={{ borderColor: '#2a2e38', background: '#181c25' }}>
-            <div className="text-xs mb-2" style={{ color: '#8b8d93' }}>
+          <div className="mt-4 p-3 rounded-lg border" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
+            <div className="text-xs mb-2" style={{ color: 'var(--muted)' }}>
               핵심 요소 {state.revealedKeyFacts.length} / {caseInfo.keyFactLabels.length} 밝혀짐
             </div>
-            <div className="w-full h-2 rounded-full mb-2" style={{ background: '#2a2e38' }}>
+            <div className="w-full h-2 rounded-full mb-2" style={{ background: 'var(--border)' }}>
               <div
                 className="h-full rounded-full transition-all"
                 style={{
-                  background: '#c8a24e',
+                  background: 'var(--accent)',
                   width: `${(state.revealedKeyFacts.length / caseInfo.keyFactLabels.length) * 100}%`,
                 }}
               />
@@ -426,9 +426,9 @@ export default function PlayPage() {
                   key={f.id}
                   className="text-[10px] px-2 py-0.5 rounded"
                   style={{
-                    background: state.revealedKeyFacts.includes(f.id) ? '#c8a24e22' : '#2a2e38',
-                    color: state.revealedKeyFacts.includes(f.id) ? '#c8a24e' : '#5a5c63',
-                    border: `1px solid ${state.revealedKeyFacts.includes(f.id) ? '#c8a24e44' : '#2a2e38'}`,
+                    background: state.revealedKeyFacts.includes(f.id) ? 'color-mix(in srgb, var(--accent) 13%, transparent)' : 'var(--border)',
+                    color: state.revealedKeyFacts.includes(f.id) ? 'var(--accent)' : 'var(--dim)',
+                    border: `1px solid ${state.revealedKeyFacts.includes(f.id) ? 'color-mix(in srgb, var(--accent) 27%, transparent)' : 'var(--border)'}`,
                   }}
                 >
                   핵심 요소 {idx + 1}
@@ -441,7 +441,7 @@ export default function PlayPage() {
           {hints.length > 0 && (
             <div className="mt-4 space-y-2">
               {hints.map((h, i) => (
-                <div key={i} className="p-2 rounded border text-xs" style={{ borderColor: '#c8a24e33', background: '#c8a24e0a', color: '#c8a24e' }}>
+                <div key={i} className="p-2 rounded border text-xs" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'color-mix(in srgb, var(--accent) 4%, transparent)', color: 'var(--accent)' }}>
                   <Lightbulb size={12} className="inline mr-1" /> 힌트 {i + 1}: {h}
                 </div>
               ))}
@@ -452,15 +452,15 @@ export default function PlayPage() {
         {/* Right: Question log */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Final submit button */}
-          <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: '#2a2e38', background: '#12151c' }}>
-            <div className="text-xs" style={{ color: '#8b8d93' }}>
+          <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+            <div className="text-xs" style={{ color: 'var(--muted)' }}>
               심문 기록 ({state.questions.length}건)
             </div>
             <button
               onClick={() => setShowFinalModal(true)}
               disabled={state.solved || state.gameOver || state.attemptsUsed >= MAX_FINAL_ATTEMPTS}
               className="flex items-center gap-1 px-3 py-1.5 rounded text-xs font-bold disabled:opacity-30"
-              style={{ background: '#c8a24e', color: '#0b0d11' }}
+              style={{ background: 'var(--accent)', color: 'var(--bg)' }}
             >
               <FileText size={12} />
               최종 추리 ({MAX_FINAL_ATTEMPTS - state.attemptsUsed}회 남음)
@@ -470,17 +470,17 @@ export default function PlayPage() {
           {/* Log */}
           <div ref={logRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {state.questions.length === 0 && (
-              <div className="text-center py-12" style={{ color: '#5a5c63' }}>
+              <div className="text-center py-12" style={{ color: 'var(--dim)' }}>
                 <FileText size={32} className="mx-auto mb-2 opacity-30" />
                 <p className="text-sm">질문을 시작하세요</p>
                 <p className="text-xs mt-1">예/아니오로 답할 수 있는 질문만 가능합니다</p>
               </div>
             )}
             {state.questions.map((q, i) => (
-              <div key={i} className="rounded-lg p-3 border" style={{ borderColor: '#2a2e38', background: '#181c25' }}>
+              <div key={i} className="rounded-lg p-3 border" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-sm flex-1" style={{ color: '#e8e6e3' }}>
-                    <span className="text-xs mr-1" style={{ color: '#5a5c63' }}>Q{i + 1}.</span>
+                  <p className="text-sm flex-1" style={{ color: 'var(--fg)' }}>
+                    <span className="text-xs mr-1" style={{ color: 'var(--dim)' }}>Q{i + 1}.</span>
                     {q.text}
                   </p>
                   <div className="flex items-center gap-1">
@@ -499,7 +499,7 @@ export default function PlayPage() {
                       className="p-1 rounded opacity-30 hover:opacity-100"
                       title="판정 신고"
                     >
-                      <Flag size={12} style={{ color: '#c0392b' }} />
+                      <Flag size={12} style={{ color: 'var(--danger)' }} />
                     </button>
                   </div>
                 </div>
@@ -508,7 +508,7 @@ export default function PlayPage() {
                     {q.revealedFacts.map((fid) => {
                       const factIdx = caseInfo.keyFactLabels.findIndex((f) => f.id === fid);
                       return (
-                        <span key={fid} className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: '#c8a24e22', color: '#c8a24e' }}>
+                        <span key={fid} className="text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'color-mix(in srgb, var(--accent) 13%, transparent)', color: 'var(--accent)' }}>
                           <Unlock size={8} className="inline mr-0.5" />
                           핵심 요소 {factIdx + 1}
                         </span>
@@ -522,21 +522,21 @@ export default function PlayPage() {
 
           {/* Input */}
           {mustFinalSubmit ? (
-            <div className="p-4 border-t" style={{ borderColor: '#2a2e38', background: '#12151c' }}>
+            <div className="p-4 border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
               <div className="text-center">
-                <AlertTriangle size={24} className="mx-auto mb-2" style={{ color: '#c0392b' }} />
-                <p className="text-sm mb-2" style={{ color: '#c0392b' }}>질문이 소진되었습니다</p>
+                <AlertTriangle size={24} className="mx-auto mb-2" style={{ color: 'var(--danger)' }} />
+                <p className="text-sm mb-2" style={{ color: 'var(--danger)' }}>질문이 소진되었습니다</p>
                 <button
                   onClick={() => setShowFinalModal(true)}
                   className="px-4 py-2 rounded font-bold text-sm"
-                  style={{ background: '#c8a24e', color: '#0b0d11' }}
+                  style={{ background: 'var(--accent)', color: 'var(--bg)' }}
                 >
                   최종 추리 제출
                 </button>
               </div>
             </div>
           ) : (
-            <div className="p-4 border-t" style={{ borderColor: '#2a2e38', background: '#12151c' }}>
+            <div className="p-4 border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -547,18 +547,18 @@ export default function PlayPage() {
                   disabled={!canAskQuestion || loading}
                   maxLength={MAX_QUESTION_LENGTH}
                   className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none disabled:opacity-30"
-                  style={{ borderColor: '#2a2e38', background: '#181c25', color: '#e8e6e3' }}
+                  style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--fg)' }}
                 />
                 <button
                   onClick={submitQuestion}
                   disabled={!canAskQuestion || loading || !question.trim()}
                   className="px-4 py-2 rounded-lg disabled:opacity-30"
-                  style={{ background: '#c8a24e', color: '#0b0d11' }}
+                  style={{ background: 'var(--accent)', color: 'var(--bg)' }}
                 >
                   {loading ? '...' : <Send size={16} />}
                 </button>
               </div>
-              <div className="flex justify-between mt-1 text-[10px]" style={{ color: '#5a5c63' }}>
+              <div className="flex justify-between mt-1 text-[10px]" style={{ color: 'var(--dim)' }}>
                 <span>{question.length}/{MAX_QUESTION_LENGTH}</span>
                 <span>-1Q (INVALID는 무료)</span>
               </div>
@@ -569,15 +569,15 @@ export default function PlayPage() {
 
       {/* Final Answer Modal */}
       {showFinalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.8)' }}>
-          <div className="w-full max-w-lg rounded-xl border p-6" style={{ borderColor: '#2a2e38', background: '#12151c' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'var(--scrim)' }}>
+          <div className="w-full max-w-lg rounded-xl border p-6" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold" style={{ color: '#c8a24e' }}>최종 추리 제출</h2>
+              <h2 className="text-lg font-bold" style={{ color: 'var(--accent)' }}>최종 추리 제출</h2>
               <button onClick={() => setShowFinalModal(false)}>
-                <X size={20} style={{ color: '#8b8d93' }} />
+                <X size={20} style={{ color: 'var(--muted)' }} />
               </button>
             </div>
-            <div className="mb-3 p-2 rounded text-xs" style={{ background: '#8b3a3a22', color: '#c0392b', border: '1px solid #8b3a3a44' }}>
+            <div className="mb-3 p-2 rounded text-xs" style={{ background: 'color-mix(in srgb, var(--no) 13%, transparent)', color: 'var(--danger)', border: '1px solid color-mix(in srgb, var(--no) 27%, transparent)' }}>
               <AlertTriangle size={12} className="inline mr-1" />
               오답 시 질문 {COST_WRONG_ANSWER}개가 차감됩니다
             </div>
@@ -587,13 +587,13 @@ export default function PlayPage() {
               placeholder="사건의 전말을 자유롭게 서술하세요..."
               rows={6}
               className="w-full px-3 py-2 rounded-lg border text-sm outline-none resize-none"
-              style={{ borderColor: '#2a2e38', background: '#181c25', color: '#e8e6e3' }}
+              style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--fg)' }}
             />
             <button
               onClick={submitFinalAnswer}
               disabled={finalLoading || !finalAnswer.trim()}
               className="w-full mt-3 py-2 rounded-lg font-bold text-sm disabled:opacity-30"
-              style={{ background: '#c8a24e', color: '#0b0d11' }}
+              style={{ background: 'var(--accent)', color: 'var(--bg)' }}
             >
               {finalLoading ? '채점 중...' : '제출'}
             </button>
@@ -603,34 +603,34 @@ export default function PlayPage() {
 
       {/* Result screen */}
       {showResult && resultData && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: '#0b0d11' }}>
+        <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'var(--bg)' }}>
           <div className="max-w-2xl mx-auto p-6">
             <div className="text-center mb-8">
               {state.solved ? (
                 <>
-                  <Trophy size={48} className="mx-auto mb-3" style={{ color: '#c8a24e' }} />
-                  <h1 className="text-2xl font-bold mb-1" style={{ color: '#c8a24e' }}>사건 해결</h1>
-                  <div className="text-4xl font-bold mb-1" style={{ color: '#e8e6e3' }}>
+                  <Trophy size={48} className="mx-auto mb-3" style={{ color: 'var(--accent)' }} />
+                  <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--accent)' }}>사건 해결</h1>
+                  <div className="text-4xl font-bold mb-1" style={{ color: 'var(--fg)' }}>
                     {resultData.rank} 랭크
                   </div>
-                  <div className="text-lg" style={{ color: '#8b8d93' }}>
+                  <div className="text-lg" style={{ color: 'var(--muted)' }}>
                     {resultData.score}점
                   </div>
                 </>
               ) : (
                 <>
-                  <AlertTriangle size={48} className="mx-auto mb-3" style={{ color: '#c0392b' }} />
-                  <h1 className="text-2xl font-bold mb-1" style={{ color: '#c0392b' }}>미해결</h1>
-                  <p className="text-sm" style={{ color: '#8b8d93' }}>D 랭크</p>
+                  <AlertTriangle size={48} className="mx-auto mb-3" style={{ color: 'var(--danger)' }} />
+                  <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--danger)' }}>미해결</h1>
+                  <p className="text-sm" style={{ color: 'var(--muted)' }}>D 랭크</p>
                 </>
               )}
             </div>
 
             {/* Truth reveal */}
             {resultData.truth && (
-              <div className="mb-6 p-4 rounded-xl border" style={{ borderColor: '#c8a24e33', background: '#c8a24e08' }}>
-                <h2 className="text-sm font-bold mb-2" style={{ color: '#c8a24e' }}>사건 전말</h2>
-                <p className="text-sm leading-relaxed" style={{ color: '#e8e6e3' }}>
+              <div className="mb-6 p-4 rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'color-mix(in srgb, var(--accent) 3%, transparent)' }}>
+                <h2 className="text-sm font-bold mb-2" style={{ color: 'var(--accent)' }}>사건 전말</h2>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--fg)' }}>
                   {resultData.truth}
                 </p>
               </div>
@@ -639,15 +639,15 @@ export default function PlayPage() {
             {/* Factor results */}
             {resultData.results && (
               <div className="mb-6 space-y-2">
-                <h2 className="text-sm font-bold" style={{ color: '#8b8d93' }}>핵심 요소 채점</h2>
+                <h2 className="text-sm font-bold" style={{ color: 'var(--muted)' }}>핵심 요소 채점</h2>
                 {resultData.results.map((r) => {
                   const fact = caseInfo.keyFactLabels.find((f) => f.id === r.id);
                   return (
-                    <div key={r.id} className="flex items-center gap-2 p-2 rounded border" style={{ borderColor: '#2a2e38', background: '#181c25' }}>
-                      <span className={`stamp text-white ${r.status === 'hit' ? 'bg-[#3a7d44]' : r.status === 'partial' ? 'bg-[#8b7a3a]' : 'bg-[#8b3a3a]'}`}>
+                    <div key={r.id} className="flex items-center gap-2 p-2 rounded border" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
+                      <span className={`stamp text-white ${r.status === 'hit' ? 'bg-yes' : r.status === 'partial' ? 'bg-maybe' : 'bg-no'}`}>
                         {r.status}
                       </span>
-                      <span className="text-sm" style={{ color: '#e8e6e3' }}>
+                      <span className="text-sm" style={{ color: 'var(--fg)' }}>
                         {fact?.label || r.id}
                       </span>
                     </div>
@@ -665,14 +665,14 @@ export default function PlayPage() {
                   alert('복사되었습니다!');
                 }}
                 className="px-4 py-2 rounded text-sm border"
-                style={{ borderColor: '#2a2e38', color: '#e8e6e3' }}
+                style={{ borderColor: 'var(--border)', color: 'var(--fg)' }}
               >
                 결과 공유 복사
               </button>
               <button
                 onClick={() => router.push('/cases')}
                 className="flex items-center gap-1 mx-auto px-4 py-2 rounded text-sm"
-                style={{ background: '#c8a24e', color: '#0b0d11' }}
+                style={{ background: 'var(--accent)', color: 'var(--bg)' }}
               >
                 사건 목록으로 <ArrowRight size={14} />
               </button>
@@ -685,10 +685,10 @@ export default function PlayPage() {
       {imageOverlay !== null && (
         <div
           className="fixed inset-0 z-40 flex items-center justify-center p-8"
-          style={{ background: 'rgba(0,0,0,0.9)' }}
+          style={{ background: 'var(--scrim-strong)' }}
           onClick={() => setImageOverlay(null)}
         >
-          <div className="max-w-2xl w-full rounded-xl overflow-hidden border" style={{ borderColor: '#c8a24e33', background: '#12151c' }}>
+          <div className="max-w-2xl w-full rounded-xl overflow-hidden border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
             {caseInfo.images?.[imageOverlay] ? (
               <img
                 src={caseInfo.images[imageOverlay]}
@@ -697,13 +697,13 @@ export default function PlayPage() {
               />
             ) : (
               <div className="p-8 text-center">
-                <Eye size={32} className="mx-auto mb-3" style={{ color: '#c8a24e' }} />
-                <p className="text-sm" style={{ color: '#8b8d93' }}>
+                <Eye size={32} className="mx-auto mb-3" style={{ color: 'var(--accent)' }} />
+                <p className="text-sm" style={{ color: 'var(--muted)' }}>
                   {`삽화 ${imageOverlay + 1}`}
                 </p>
               </div>
             )}
-            <p className="text-xs text-center py-3" style={{ color: '#5a5c63' }}>
+            <p className="text-xs text-center py-3" style={{ color: 'var(--dim)' }}>
               클릭하여 닫기
             </p>
           </div>
@@ -714,15 +714,15 @@ export default function PlayPage() {
       {showHintModal && hints.length > 0 && (
         <div
           className="fixed inset-0 z-40 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.8)' }}
+          style={{ background: 'var(--scrim)' }}
           onClick={() => setShowHintModal(false)}
         >
-          <div className="max-w-md w-full rounded-xl p-6 border" style={{ borderColor: '#c8a24e33', background: '#12151c' }}>
-            <Lightbulb size={24} className="mx-auto mb-2" style={{ color: '#c8a24e' }} />
-            <h3 className="text-center text-sm font-bold mb-3" style={{ color: '#c8a24e' }}>
+          <div className="max-w-md w-full rounded-xl p-6 border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
+            <Lightbulb size={24} className="mx-auto mb-2" style={{ color: 'var(--accent)' }} />
+            <h3 className="text-center text-sm font-bold mb-3" style={{ color: 'var(--accent)' }}>
               힌트 {hints.length}
             </h3>
-            <p className="text-sm text-center" style={{ color: '#e8e6e3' }}>
+            <p className="text-sm text-center" style={{ color: 'var(--fg)' }}>
               {hints[hints.length - 1]}
             </p>
           </div>

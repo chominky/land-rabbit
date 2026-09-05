@@ -38,7 +38,7 @@ export default function AdminLoginPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#0b0d11',
+        background: 'var(--bg)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -47,8 +47,8 @@ export default function AdminLoginPage() {
     >
       <div
         style={{
-          background: '#12151c',
-          border: '1px solid #2a2e38',
+          background: 'var(--surface)',
+          border: '1px solid var(--border)',
           borderRadius: '8px',
           padding: '48px 40px',
           width: '100%',
@@ -57,17 +57,17 @@ export default function AdminLoginPage() {
       >
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ fontSize: '32px', marginBottom: '8px' }}>🔍</div>
-          <h1 style={{ color: '#c8a24e', fontSize: '20px', fontWeight: 700, margin: 0 }}>
+          <h1 style={{ color: 'var(--accent)', fontSize: '20px', fontWeight: 700, margin: 0 }}>
             육지토끼고기
           </h1>
-          <p style={{ color: '#5a6070', fontSize: '13px', marginTop: '6px' }}>관리자 전용 패널</p>
+          <p style={{ color: 'var(--dim)', fontSize: '13px', marginTop: '6px' }}>관리자 전용 패널</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
             <label
               htmlFor="password"
-              style={{ display: 'block', color: '#8b92a0', fontSize: '12px', marginBottom: '8px', letterSpacing: '0.05em' }}
+              style={{ display: 'block', color: 'var(--muted)', fontSize: '12px', marginBottom: '8px', letterSpacing: '0.05em' }}
             >
               PASSWORD
             </label>
@@ -80,11 +80,11 @@ export default function AdminLoginPage() {
               required
               style={{
                 width: '100%',
-                background: '#0b0d11',
-                border: '1px solid #2a2e38',
+                background: 'var(--bg)',
+                border: '1px solid var(--border)',
                 borderRadius: '4px',
                 padding: '10px 14px',
-                color: '#e8eaf0',
+                color: 'var(--fg)',
                 fontSize: '14px',
                 outline: 'none',
                 boxSizing: 'border-box',
@@ -99,7 +99,7 @@ export default function AdminLoginPage() {
                 border: '1px solid rgba(220, 38, 38, 0.3)',
                 borderRadius: '4px',
                 padding: '8px 12px',
-                color: '#f87171',
+                color: 'var(--danger-fg)',
                 fontSize: '13px',
                 marginBottom: '16px',
               }}
@@ -113,8 +113,8 @@ export default function AdminLoginPage() {
             disabled={loading}
             style={{
               width: '100%',
-              background: loading ? '#5a4820' : '#c8a24e',
-              color: loading ? '#8b7040' : '#0b0d11',
+              background: loading ? 'var(--accent-deep)' : 'var(--accent)',
+              color: loading ? 'var(--accent-mid)' : 'var(--bg)',
               border: 'none',
               borderRadius: '4px',
               padding: '11px',

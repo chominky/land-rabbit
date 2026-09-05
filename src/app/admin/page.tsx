@@ -26,12 +26,12 @@ const cards = [
 
 export default function AdminDashboardPage() {
   return (
-    <div style={{ padding: '40px', color: '#e8eaf0' }}>
+    <div style={{ padding: '40px', color: 'var(--fg)' }}>
       <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#c8a24e', margin: 0 }}>
+        <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--accent)', margin: 0 }}>
           Dashboard
         </h1>
-        <p style={{ color: '#5a6070', fontSize: '13px', marginTop: '6px' }}>
+        <p style={{ color: 'var(--dim)', fontSize: '13px', marginTop: '6px' }}>
           육지토끼고기 관리자 패널에 오신 것을 환영합니다.
         </p>
       </div>
@@ -45,8 +45,8 @@ export default function AdminDashboardPage() {
           >
             <div
               style={{
-                background: '#12151c',
-                border: '1px solid #2a2e38',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
                 borderRadius: '8px',
                 padding: '24px',
                 cursor: 'pointer',
@@ -56,30 +56,30 @@ export default function AdminDashboardPage() {
                 gap: '12px',
               }}
               onMouseEnter={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = '#c8a24e';
+                (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--accent)';
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLDivElement).style.borderColor = '#2a2e38';
+                (e.currentTarget as HTMLDivElement).style.borderColor = 'var(--border)';
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div
                   style={{
-                    background: 'rgba(200, 162, 78, 0.12)',
+                    background: 'color-mix(in srgb, var(--accent) 12%, transparent)',
                     borderRadius: '8px',
                     padding: '10px',
                     display: 'inline-flex',
                   }}
                 >
-                  <Icon size={20} color="#c8a24e" />
+                  <Icon size={20} color="var(--accent)" />
                 </div>
-                <ChevronRight size={16} color="#5a6070" />
+                <ChevronRight size={16} color="var(--dim)" />
               </div>
               <div>
-                <div style={{ color: '#e8eaf0', fontWeight: 600, fontSize: '15px', marginBottom: '6px' }}>
+                <div style={{ color: 'var(--fg)', fontWeight: 600, fontSize: '15px', marginBottom: '6px' }}>
                   {title}
                 </div>
-                <div style={{ color: '#5a6070', fontSize: '12px', lineHeight: '1.6' }}>
+                <div style={{ color: 'var(--dim)', fontSize: '12px', lineHeight: '1.6' }}>
                   {description}
                 </div>
               </div>

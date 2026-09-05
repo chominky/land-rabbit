@@ -1,52 +1,154 @@
 @import "tailwindcss";
 
+/*
+ * ── 디자인 토큰 (P1-A) ────────────────────────────────────────────────────────
+ * 원시 값은 :root에만 존재한다. 컴포넌트는 Tailwind 토큰 클래스(bg-surface,
+ * text-muted …) 또는 src/lib/theme.ts의 var() 문자열로만 색을 참조한다.
+ * 라이트 테마(P1-C)는 이 블록을 [data-theme="light"]로 덮어쓰기만 하면 된다.
+ */
 :root {
-  --bg-primary: #0b0d11;
-  --bg-secondary: #12151c;
-  --bg-card: #181c25;
+  /* 배경 */
+  --bg: #0b0d11;
+  --surface: #12151c;
+  --surface-2: #181c25;
+  --surface-3: #1e2230;
+  --bg-deep: #0f1219;
+  --surface-inset: #1a1d24;
+
+  /* 테두리 */
   --border: #2a2e38;
-  --text-primary: #e8e6e3;
-  --text-secondary: #8b8d93;
-  --text-muted: #5a5c63;
-  --amber: #c8a24e;
-  --amber-dim: #8b7235;
-  --verdict-yes: #3a7d44;
-  --verdict-no: #8b3a3a;
-  --verdict-maybe: #8b7a3a;
-  --verdict-irrelevant: #4a4c53;
-  --verdict-invalid: #4a4c53;
+  --border-strong: #3a3e4a;
+
+  /* 텍스트 */
+  --fg: #e8e6e3;
+  --muted: #8b8d93;
+  --dim: #5a5c63;
+
+  /* 강조 */
+  --accent: #c8a24e;
+  --accent-mid: #8b7040;
+  --accent-dim: #8b7235;
+  --accent-deep: #5a4820;
+
+  /* 판정 */
+  --yes: #3a7d44;
+  --no: #8b3a3a;
+  --maybe: #8b7a3a;
+  --neutral: #4a4c53;
+
+  /* 상태 */
   --danger: #c0392b;
-  --background: #0b0d11;
-  --foreground: #e8e6e3;
+  --danger-fg: #f87171;
+  --danger-soft: #e07070;
+  --danger-surface: #1a0d0d;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --info: #818cf8;
+  --info-surface: #1a3050;
+  --info-border: #5a7090;
+  --gray: #6b7280;
+
+  /* 단색 위 텍스트 (테마 무관) */
+  --on-solid: #ffffff;
+
+  /* 모달 스크림 */
+  --scrim: rgba(0, 0, 0, 0.8);
+  --scrim-strong: rgba(0, 0, 0, 0.9);
+
+  /* 랭크 */
+  --rank-s: #c8a24e;
+  --rank-a: #4ade80;
+  --rank-b: #38bdf8;
+  --rank-c: #a78bfa;
+  --rank-d: #8b8d93;
+
+  /* Next.js 기본 토큰 호환 */
+  --background: var(--bg);
+  --foreground: var(--fg);
+}
+
+/*
+ * 관리자 화면은 본편과 배경/강조는 공유하고 텍스트 계열만 살짝 차갑다.
+ * 별도 토큰을 만들지 않고 같은 토큰명을 스코프에서 덮어쓴다.
+ */
+[data-scope="admin"] {
+  --fg: #e8eaf0;
+  --muted: #8b92a0;
+  --dim: #5a6070;
+  --surface-3: #1a1e28;
 }
 
 @theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-bg-deep: var(--bg-deep);
+  --color-surface-inset: var(--surface-inset);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-dim: var(--dim);
+
+  --color-accent: var(--accent);
+  --color-accent-mid: var(--accent-mid);
+  --color-accent-dim: var(--accent-dim);
+  --color-accent-deep: var(--accent-deep);
+
+  --color-yes: var(--yes);
+  --color-no: var(--no);
+  --color-maybe: var(--maybe);
+  --color-neutral: var(--neutral);
+
+  --color-danger: var(--danger);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-surface: var(--danger-surface);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-info-surface: var(--info-surface);
+  --color-info-border: var(--info-border);
+  --color-gray: var(--gray);
+  --color-on-solid: var(--on-solid);
+  --color-scrim: var(--scrim);
+  --color-scrim-strong: var(--scrim-strong);
+
+  --color-rank-s: var(--rank-s);
+  --color-rank-a: var(--rank-a);
+  --color-rank-b: var(--rank-b);
+  --color-rank-c: var(--rank-c);
+  --color-rank-d: var(--rank-d);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 }
 
 body {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+  background: var(--bg);
+  color: var(--fg);
   font-family: 'Segoe UI', sans-serif;
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 
 /* Verdict badges */
-.verdict-yes { background: var(--verdict-yes); }
-.verdict-no { background: var(--verdict-no); }
-.verdict-maybe { background: var(--verdict-maybe); }
-.verdict-irrelevant { background: var(--verdict-irrelevant); }
-.verdict-invalid { background: var(--verdict-invalid); }
+.verdict-yes { background: var(--yes); }
+.verdict-no { background: var(--no); }
+.verdict-maybe { background: var(--maybe); }
+.verdict-irrelevant { background: var(--neutral); }
+.verdict-invalid { background: var(--neutral); }
 
 /* Locked image slot */
 .locked-slot {
   background: repeating-conic-gradient(
-    var(--bg-card) 0% 25%, var(--bg-secondary) 0% 50%
+    var(--surface-2) 0% 25%, var(--surface) 0% 50%
   ) 50% / 20px 20px;
   filter: blur(2px);
 }
@@ -75,6 +177,6 @@ body {
 
 /* Menu keyboard nav */
 .menu-item-active {
-  border-left: 3px solid var(--amber);
-  background: rgba(200, 162, 78, 0.08);
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }

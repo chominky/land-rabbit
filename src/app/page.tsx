@@ -132,14 +132,14 @@ export default function HomePage() {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4 py-12 relative"
-      style={{ background: '#0b0d11' }}
+      style={{ background: 'var(--bg)' }}
     >
       {/* Subtle noise/grid overlay */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage:
-            'repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(42,46,56,0.25) 39px, rgba(42,46,56,0.25) 40px)',
+            'repeating-linear-gradient(0deg, transparent, transparent 39px, color-mix(in srgb, var(--border) 25%, transparent) 39px, color-mix(in srgb, var(--border) 25%, transparent) 40px)',
           opacity: 0.4,
         }}
       />
@@ -149,17 +149,17 @@ export default function HomePage() {
         <div className="text-center">
           <h1
             className="text-4xl sm:text-5xl font-bold tracking-tight leading-none mb-3"
-            style={{ color: '#e8e6e3', letterSpacing: '0.05em' }}
+            style={{ color: 'var(--fg)', letterSpacing: '0.05em' }}
           >
             육지토끼고기
           </h1>
-          <p className="text-base" style={{ color: '#8b8d93' }}>
+          <p className="text-base" style={{ color: 'var(--muted)' }}>
             삼류 바다거북스프게임
           </p>
         </div>
 
         {/* Divider */}
-        <div className="w-full border-t" style={{ borderColor: '#2a2e38' }} />
+        <div className="w-full border-t" style={{ borderColor: 'var(--border)' }} />
 
         {/* Menu */}
         <nav className="w-full flex flex-col gap-1" aria-label="메인 메뉴">
@@ -183,18 +183,18 @@ export default function HomePage() {
                   isDisabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer',
                 ].join(' ')}
                 style={{
-                  color: isActive && !isDisabled ? '#c8a24e' : '#e8e6e3',
-                  borderLeft: isActive && !isDisabled ? '3px solid #c8a24e' : '3px solid transparent',
-                  background: isActive && !isDisabled ? 'rgba(200,162,78,0.08)' : 'transparent',
+                  color: isActive && !isDisabled ? 'var(--accent)' : 'var(--fg)',
+                  borderLeft: isActive && !isDisabled ? '3px solid var(--accent)' : '3px solid transparent',
+                  background: isActive && !isDisabled ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : 'transparent',
                 }}
                 aria-current={isActive ? 'true' : undefined}
               >
-                <span style={{ color: isActive && !isDisabled ? '#c8a24e' : '#5a5c63' }}>
+                <span style={{ color: isActive && !isDisabled ? 'var(--accent)' : 'var(--dim)' }}>
                   {item.icon}
                 </span>
                 <span className="text-base font-medium">{item.label}</span>
                 {item.label === '이어하기' && !hasSaves && (
-                  <span className="ml-auto text-xs" style={{ color: '#5a5c63' }}>
+                  <span className="ml-auto text-xs" style={{ color: 'var(--dim)' }}>
                     저장 없음
                   </span>
                 )}
@@ -204,10 +204,10 @@ export default function HomePage() {
         </nav>
 
         {/* Divider */}
-        <div className="w-full border-t" style={{ borderColor: '#2a2e38' }} />
+        <div className="w-full border-t" style={{ borderColor: 'var(--border)' }} />
 
         {/* Keyboard hint */}
-        <div className="flex items-center gap-2 text-xs" style={{ color: '#5a5c63' }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--dim)' }}>
           <ArrowUp size={12} />
           <ArrowDown size={12} />
           <span>이동 · Enter 선택</span>
@@ -216,7 +216,7 @@ export default function HomePage() {
         {/* Footer notice */}
         <p
           className="text-center text-xs leading-relaxed"
-          style={{ color: '#5a5c63', maxWidth: '280px' }}
+          style={{ color: 'var(--dim)', maxWidth: '280px' }}
         >
           이 게임의 판정·힌트·삽화·스토리는 AI로 생성됩니다.
         </p>
@@ -226,7 +226,7 @@ export default function HomePage() {
       {showRoomModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ background: 'rgba(11,13,17,0.85)', backdropFilter: 'blur(4px)' }}
+          style={{ background: 'var(--scrim)', backdropFilter: 'blur(4px)' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowRoomModal(false);
@@ -238,10 +238,10 @@ export default function HomePage() {
         >
           <div
             className="w-full max-w-xs rounded-lg p-6 flex flex-col gap-4"
-            style={{ background: '#12151c', border: '1px solid #2a2e38' }}
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-base" style={{ color: '#e8e6e3' }}>
+              <h2 className="font-semibold text-base" style={{ color: 'var(--fg)' }}>
                 방 참가
               </h2>
               <button
@@ -252,7 +252,7 @@ export default function HomePage() {
                   setJoinError('');
                 }}
                 className="text-lg leading-none"
-                style={{ color: '#5a5c63' }}
+                style={{ color: 'var(--dim)' }}
                 aria-label="닫기"
               >
                 ✕
@@ -261,7 +261,7 @@ export default function HomePage() {
 
             <div className="flex flex-col gap-3">
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-wider uppercase" style={{ color: '#8b8d93' }}>
+                <span className="text-xs tracking-wider uppercase" style={{ color: 'var(--muted)' }}>
                   방 코드
                 </span>
                 <input
@@ -274,22 +274,22 @@ export default function HomePage() {
                   autoFocus
                   className="rounded px-3 py-2 text-sm font-mono outline-none focus:ring-1"
                   style={{
-                    background: '#0b0d11',
-                    border: '1px solid #2a2e38',
-                    color: '#e8e6e3',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--fg)',
                     letterSpacing: '0.15em',
                   }}
                   onFocus={(e) =>
-                    (e.currentTarget.style.borderColor = '#c8a24e')
+                    (e.currentTarget.style.borderColor = 'var(--accent)')
                   }
                   onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '#2a2e38')
+                    (e.currentTarget.style.borderColor = 'var(--border)')
                   }
                 />
               </label>
 
               <label className="flex flex-col gap-1">
-                <span className="text-xs tracking-wider uppercase" style={{ color: '#8b8d93' }}>
+                <span className="text-xs tracking-wider uppercase" style={{ color: 'var(--muted)' }}>
                   닉네임
                 </span>
                 <input
@@ -301,22 +301,22 @@ export default function HomePage() {
                   maxLength={20}
                   className="rounded px-3 py-2 text-sm outline-none focus:ring-1"
                   style={{
-                    background: '#0b0d11',
-                    border: '1px solid #2a2e38',
-                    color: '#e8e6e3',
+                    background: 'var(--bg)',
+                    border: '1px solid var(--border)',
+                    color: 'var(--fg)',
                   }}
                   onFocus={(e) =>
-                    (e.currentTarget.style.borderColor = '#c8a24e')
+                    (e.currentTarget.style.borderColor = 'var(--accent)')
                   }
                   onBlur={(e) =>
-                    (e.currentTarget.style.borderColor = '#2a2e38')
+                    (e.currentTarget.style.borderColor = 'var(--border)')
                   }
                 />
               </label>
             </div>
 
             {joinError && (
-              <p className="text-xs" style={{ color: '#c0392b' }}>
+              <p className="text-xs" style={{ color: 'var(--danger)' }}>
                 {joinError}
               </p>
             )}
@@ -326,8 +326,8 @@ export default function HomePage() {
               disabled={joining}
               className="w-full py-2.5 rounded text-sm font-semibold tracking-wide transition-opacity"
               style={{
-                background: '#c8a24e',
-                color: '#0b0d11',
+                background: 'var(--accent)',
+                color: 'var(--bg)',
                 opacity: joining ? 0.6 : 1,
                 cursor: joining ? 'not-allowed' : 'pointer',
               }}

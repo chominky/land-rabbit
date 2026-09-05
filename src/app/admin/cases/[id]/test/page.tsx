@@ -39,20 +39,20 @@ type GoldenTestWithResult = GoldenTest & {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const VERDICT_COLORS: Record<string, string> = {
-  YES: '#4ade80',
-  NO: '#f87171',
-  MAYBE: '#fbbf24',
-  IRRELEVANT: '#8b92a0',
-  INVALID: '#6b7280',
+  YES: 'var(--success)',
+  NO: 'var(--danger-fg)',
+  MAYBE: 'var(--warning)',
+  IRRELEVANT: 'var(--muted)',
+  INVALID: 'var(--gray)',
 };
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#0b0d11',
-  border: '1px solid #2a2e38',
+  background: 'var(--bg)',
+  border: '1px solid var(--border)',
   borderRadius: '4px',
   padding: '9px 12px',
-  color: '#e8eaf0',
+  color: 'var(--fg)',
   fontSize: '13px',
   outline: 'none',
   boxSizing: 'border-box',
@@ -69,14 +69,14 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   return (
     <div
       style={{
-        background: '#12151c',
-        border: '1px solid #2a2e38',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
         borderRadius: '8px',
         padding: '24px',
         marginBottom: '16px',
       }}
     >
-      <div style={{ color: '#c8a24e', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '18px' }}>
+      <div style={{ color: 'var(--accent)', fontSize: '12px', fontWeight: 700, letterSpacing: '0.08em', marginBottom: '18px' }}>
         {title}
       </div>
       {children}
@@ -93,9 +93,9 @@ function VerdictBadge({ verdict }: { verdict: Verdict }) {
         borderRadius: '4px',
         fontSize: '12px',
         fontWeight: 700,
-        color: VERDICT_COLORS[verdict] || '#8b92a0',
-        background: `${VERDICT_COLORS[verdict] || '#8b92a0'}18`,
-        border: `1px solid ${VERDICT_COLORS[verdict] || '#8b92a0'}40`,
+        color: VERDICT_COLORS[verdict] || 'var(--muted)',
+        background: `${VERDICT_COLORS[verdict] || 'var(--muted)'}18`,
+        border: `1px solid ${VERDICT_COLORS[verdict] || 'var(--muted)'}40`,
       }}
     >
       {verdict}
@@ -252,12 +252,12 @@ export default function CaseTestPage() {
   const failCount = goldenTests.filter((t) => t.passed === false).length;
 
   return (
-    <div style={{ padding: '32px', color: '#e8eaf0', fontFamily: 'monospace' }}>
+    <div style={{ padding: '32px', color: 'var(--fg)', fontFamily: 'monospace' }}>
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#c8a24e', margin: 0 }}>
+        <h1 style={{ fontSize: '20px', fontWeight: 700, color: 'var(--accent)', margin: 0 }}>
           Test: {caseId}
         </h1>
-        <p style={{ color: '#5a6070', fontSize: '13px', marginTop: '4px' }}>
+        <p style={{ color: 'var(--dim)', fontSize: '13px', marginTop: '4px' }}>
           AI 판정기 및 최종 심판 테스트
         </p>
       </div>
@@ -266,7 +266,7 @@ export default function CaseTestPage() {
         {/* Judge tester */}
         <Panel title="JUDGE TESTER">
           <div style={{ marginBottom: '12px' }}>
-            <div style={{ color: '#5a6070', fontSize: '11px', marginBottom: '6px' }}>QUESTION</div>
+            <div style={{ color: 'var(--dim)', fontSize: '11px', marginBottom: '6px' }}>QUESTION</div>
             <textarea
               style={textareaStyle}
               value={judgeInput}
@@ -284,8 +284,8 @@ export default function CaseTestPage() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: judgeLoading ? '#5a4820' : '#c8a24e',
-              color: judgeLoading ? '#8b7040' : '#0b0d11',
+              background: judgeLoading ? 'var(--accent-deep)' : 'var(--accent)',
+              color: judgeLoading ? 'var(--accent-mid)' : 'var(--bg)',
               border: 'none',
               padding: '8px 14px',
               borderRadius: '5px',
@@ -300,22 +300,22 @@ export default function CaseTestPage() {
           </button>
 
           {judgeError && (
-            <div style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }}>{judgeError}</div>
+            <div style={{ color: 'var(--danger-fg)', fontSize: '12px', marginBottom: '10px' }}>{judgeError}</div>
           )}
 
           {judgeResult && (
-            <div style={{ background: '#0b0d11', border: '1px solid #2a2e38', borderRadius: '6px', padding: '14px' }}>
+            <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <VerdictBadge verdict={judgeResult.verdict} />
               </div>
-              <div style={{ color: '#8b92a0', fontSize: '12px', lineHeight: '1.6', marginBottom: '10px' }}>
+              <div style={{ color: 'var(--muted)', fontSize: '12px', lineHeight: '1.6', marginBottom: '10px' }}>
                 {judgeResult.comment}
               </div>
               {judgeResult.revealedFacts?.length > 0 && (
                 <div>
-                  <div style={{ color: '#5a6070', fontSize: '11px', marginBottom: '5px' }}>REVEALED FACTS</div>
+                  <div style={{ color: 'var(--dim)', fontSize: '11px', marginBottom: '5px' }}>REVEALED FACTS</div>
                   {judgeResult.revealedFacts.map((f, i) => (
-                    <div key={i} style={{ color: '#4ade80', fontSize: '12px', marginBottom: '3px' }}>• {f}</div>
+                    <div key={i} style={{ color: 'var(--success)', fontSize: '12px', marginBottom: '3px' }}>• {f}</div>
                   ))}
                 </div>
               )}
@@ -326,7 +326,7 @@ export default function CaseTestPage() {
         {/* Verdict tester */}
         <Panel title="VERDICT TESTER">
           <div style={{ marginBottom: '12px' }}>
-            <div style={{ color: '#5a6070', fontSize: '11px', marginBottom: '6px' }}>FINAL ANSWER</div>
+            <div style={{ color: 'var(--dim)', fontSize: '11px', marginBottom: '6px' }}>FINAL ANSWER</div>
             <textarea
               style={{ ...textareaStyle, minHeight: '100px' }}
               value={verdictInput}
@@ -341,8 +341,8 @@ export default function CaseTestPage() {
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: verdictLoading ? '#1a3050' : 'rgba(99,102,241,0.2)',
-              color: verdictLoading ? '#5a7090' : '#818cf8',
+              background: verdictLoading ? 'var(--info-surface)' : 'rgba(99,102,241,0.2)',
+              color: verdictLoading ? 'var(--info-border)' : 'var(--info)',
               border: '1px solid rgba(99,102,241,0.3)',
               padding: '8px 14px',
               borderRadius: '5px',
@@ -357,31 +357,31 @@ export default function CaseTestPage() {
           </button>
 
           {verdictError && (
-            <div style={{ color: '#f87171', fontSize: '12px', marginBottom: '10px' }}>{verdictError}</div>
+            <div style={{ color: 'var(--danger-fg)', fontSize: '12px', marginBottom: '10px' }}>{verdictError}</div>
           )}
 
           {verdictResult && (
-            <div style={{ background: '#0b0d11', border: '1px solid #2a2e38', borderRadius: '6px', padding: '14px' }}>
+            <div style={{ background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '6px', padding: '14px' }}>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '10px' }}>
-                <span style={{ color: verdictResult.solved ? '#4ade80' : '#f87171', fontWeight: 700, fontSize: '13px' }}>
+                <span style={{ color: verdictResult.solved ? 'var(--success)' : 'var(--danger-fg)', fontWeight: 700, fontSize: '13px' }}>
                   {verdictResult.solved ? 'SOLVED' : 'NOT SOLVED'}
                 </span>
-                <span style={{ color: '#8b92a0', fontSize: '12px' }}>
+                <span style={{ color: 'var(--muted)', fontSize: '12px' }}>
                   Accuracy: {Math.round(verdictResult.accuracy * 100)}%
                 </span>
               </div>
-              <div style={{ color: '#8b92a0', fontSize: '12px', lineHeight: '1.6', marginBottom: '10px' }}>
+              <div style={{ color: 'var(--muted)', fontSize: '12px', lineHeight: '1.6', marginBottom: '10px' }}>
                 {verdictResult.feedback}
               </div>
               {verdictResult.results?.length > 0 && (
                 <div>
-                  <div style={{ color: '#5a6070', fontSize: '11px', marginBottom: '6px' }}>FACT RESULTS</div>
+                  <div style={{ color: 'var(--dim)', fontSize: '11px', marginBottom: '6px' }}>FACT RESULTS</div>
                   {verdictResult.results.map((r) => (
                     <div key={r.id} style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '5px' }}>
-                      <span style={{ color: r.status === 'hit' ? '#4ade80' : r.status === 'partial' ? '#fbbf24' : '#f87171', fontSize: '11px', fontWeight: 700, minWidth: '48px', marginTop: '1px' }}>
+                      <span style={{ color: r.status === 'hit' ? 'var(--success)' : r.status === 'partial' ? 'var(--warning)' : 'var(--danger-fg)', fontSize: '11px', fontWeight: 700, minWidth: '48px', marginTop: '1px' }}>
                         {r.status.toUpperCase()}
                       </span>
-                      <span style={{ color: '#8b92a0', fontSize: '12px', flex: 1 }}>{r.id}</span>
+                      <span style={{ color: 'var(--muted)', fontSize: '12px', flex: 1 }}>{r.id}</span>
                     </div>
                   ))}
                 </div>
@@ -396,14 +396,14 @@ export default function CaseTestPage() {
         {/* Add new */}
         <div
           style={{
-            background: '#0b0d11',
-            border: '1px solid #2a2e38',
+            background: 'var(--bg)',
+            border: '1px solid var(--border)',
             borderRadius: '6px',
             padding: '14px',
             marginBottom: '16px',
           }}
         >
-          <div style={{ color: '#5a6070', fontSize: '11px', fontWeight: 600, marginBottom: '10px' }}>NEW GOLDEN TEST</div>
+          <div style={{ color: 'var(--dim)', fontSize: '11px', fontWeight: 600, marginBottom: '10px' }}>NEW GOLDEN TEST</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 160px auto', gap: '8px', alignItems: 'flex-start' }}>
             <textarea
               style={{ ...textareaStyle, minHeight: '60px' }}
@@ -427,9 +427,9 @@ export default function CaseTestPage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '5px',
-                background: 'rgba(200,162,78,0.1)',
-                border: '1px solid rgba(200,162,78,0.2)',
-                color: '#c8a24e',
+                background: 'color-mix(in srgb, var(--accent) 10%, transparent)',
+                border: '1px solid color-mix(in srgb, var(--accent) 20%, transparent)',
+                color: 'var(--accent)',
                 padding: '0 12px',
                 height: '60px',
                 borderRadius: '4px',
@@ -445,14 +445,14 @@ export default function CaseTestPage() {
 
         {/* Run all */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-          <div style={{ fontSize: '13px', color: '#8b92a0' }}>
+          <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
             총 {goldenTests.length}개
             {(passCount > 0 || failCount > 0) && (
               <>
                 &nbsp;&nbsp;
-                <span style={{ color: '#4ade80' }}>{passCount} Pass</span>
+                <span style={{ color: 'var(--success)' }}>{passCount} Pass</span>
                 &nbsp;&nbsp;
-                <span style={{ color: '#f87171' }}>{failCount} Fail</span>
+                <span style={{ color: 'var(--danger-fg)' }}>{failCount} Fail</span>
               </>
             )}
           </div>
@@ -463,9 +463,9 @@ export default function CaseTestPage() {
               display: 'flex',
               alignItems: 'center',
               gap: '5px',
-              background: runningAll ? '#1a1e28' : 'rgba(99,102,241,0.1)',
+              background: runningAll ? 'var(--surface-3)' : 'rgba(99,102,241,0.1)',
               border: '1px solid rgba(99,102,241,0.25)',
-              color: runningAll ? '#5a6070' : '#818cf8',
+              color: runningAll ? 'var(--dim)' : 'var(--info)',
               padding: '7px 14px',
               borderRadius: '5px',
               cursor: runningAll ? 'not-allowed' : 'pointer',
@@ -480,9 +480,9 @@ export default function CaseTestPage() {
 
         {/* Test list */}
         {goldenLoading ? (
-          <div style={{ color: '#5a6070', textAlign: 'center', padding: '20px', fontSize: '13px' }}>불러오는 중...</div>
+          <div style={{ color: 'var(--dim)', textAlign: 'center', padding: '20px', fontSize: '13px' }}>불러오는 중...</div>
         ) : goldenTests.length === 0 ? (
-          <div style={{ color: '#5a6070', textAlign: 'center', padding: '20px', fontSize: '13px' }}>
+          <div style={{ color: 'var(--dim)', textAlign: 'center', padding: '20px', fontSize: '13px' }}>
             Golden Test가 없습니다. 위에서 추가하세요.
           </div>
         ) : (
@@ -491,8 +491,8 @@ export default function CaseTestPage() {
               <div
                 key={test.id}
                 style={{
-                  background: '#0b0d11',
-                  border: `1px solid ${test.passed === true ? 'rgba(34,197,94,0.2)' : test.passed === false ? 'rgba(220,38,38,0.2)' : '#2a2e38'}`,
+                  background: 'var(--bg)',
+                  border: `1px solid ${test.passed === true ? 'rgba(34,197,94,0.2)' : test.passed === false ? 'rgba(220,38,38,0.2)' : 'var(--border)'}`,
                   borderRadius: '6px',
                   padding: '12px 14px',
                   marginBottom: '8px',
@@ -500,27 +500,27 @@ export default function CaseTestPage() {
               >
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: '#e8eaf0', fontSize: '13px', marginBottom: '6px', lineHeight: '1.5' }}>
+                    <div style={{ color: 'var(--fg)', fontSize: '13px', marginBottom: '6px', lineHeight: '1.5' }}>
                       {test.question}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <span style={{ color: '#5a6070', fontSize: '11px' }}>Expected:</span>
+                      <span style={{ color: 'var(--dim)', fontSize: '11px' }}>Expected:</span>
                       <VerdictBadge verdict={test.expected_verdict} />
                       {test.actual && (
                         <>
-                          <span style={{ color: '#5a6070', fontSize: '11px' }}>Actual:</span>
+                          <span style={{ color: 'var(--dim)', fontSize: '11px' }}>Actual:</span>
                           <VerdictBadge verdict={test.actual} />
                           {test.passed === true ? (
-                            <CheckCircle size={14} color="#4ade80" />
+                            <CheckCircle size={14} color="var(--success)" />
                           ) : (
-                            <XCircle size={14} color="#f87171" />
+                            <XCircle size={14} color="var(--danger-fg)" />
                           )}
                         </>
                       )}
-                      {test.running && <Loader2 size={13} color="#c8a24e" />}
+                      {test.running && <Loader2 size={13} color="var(--accent)" />}
                     </div>
                     {test.comment && (
-                      <div style={{ color: '#5a6070', fontSize: '11px', marginTop: '5px', fontStyle: 'italic' }}>
+                      <div style={{ color: 'var(--dim)', fontSize: '11px', marginTop: '5px', fontStyle: 'italic' }}>
                         {test.comment}
                       </div>
                     )}
@@ -535,7 +535,7 @@ export default function CaseTestPage() {
                         padding: '5px 8px',
                         background: 'rgba(99,102,241,0.08)',
                         border: 'none',
-                        color: '#818cf8',
+                        color: 'var(--info)',
                         borderRadius: '4px',
                         cursor: test.running ? 'not-allowed' : 'pointer',
                       }}
@@ -550,7 +550,7 @@ export default function CaseTestPage() {
                         padding: '5px 8px',
                         background: 'rgba(220,38,38,0.08)',
                         border: 'none',
-                        color: '#f87171',
+                        color: 'var(--danger-fg)',
                         borderRadius: '4px',
                         cursor: 'pointer',
                       }}

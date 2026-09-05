@@ -78,12 +78,12 @@ export default function AdminCasesPage() {
   }
 
   return (
-    <div style={{ padding: '40px', color: '#e8eaf0' }}>
+    <div style={{ padding: '40px', color: 'var(--fg)' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: 700, color: '#c8a24e', margin: 0 }}>Cases</h1>
-          <p style={{ color: '#5a6070', fontSize: '13px', marginTop: '4px' }}>
+          <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'var(--accent)', margin: 0 }}>Cases</h1>
+          <p style={{ color: 'var(--dim)', fontSize: '13px', marginTop: '4px' }}>
             총 {cases.length}개 사건
           </p>
         </div>
@@ -93,8 +93,8 @@ export default function AdminCasesPage() {
             display: 'inline-flex',
             alignItems: 'center',
             gap: '6px',
-            background: '#c8a24e',
-            color: '#0b0d11',
+            background: 'var(--accent)',
+            color: 'var(--bg)',
             padding: '9px 16px',
             borderRadius: '6px',
             textDecoration: 'none',
@@ -109,26 +109,26 @@ export default function AdminCasesPage() {
 
       {/* Error */}
       {error && (
-        <div style={{ color: '#f87171', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
+        <div style={{ color: 'var(--danger-fg)', background: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
           {error}
         </div>
       )}
 
       {/* Table */}
       {loading ? (
-        <div style={{ color: '#5a6070', textAlign: 'center', padding: '60px' }}>불러오는 중...</div>
+        <div style={{ color: 'var(--dim)', textAlign: 'center', padding: '60px' }}>불러오는 중...</div>
       ) : (
-        <div style={{ background: '#12151c', border: '1px solid #2a2e38', borderRadius: '8px', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ borderBottom: '1px solid #2a2e38' }}>
+              <tr style={{ borderBottom: '1px solid var(--border)' }}>
                 {['Title', 'Status', 'Difficulty', 'Images', 'Plays', 'Flags', 'Actions'].map((h) => (
                   <th
                     key={h}
                     style={{
                       padding: '12px 16px',
                       textAlign: 'left',
-                      color: '#5a6070',
+                      color: 'var(--dim)',
                       fontSize: '11px',
                       fontWeight: 600,
                       letterSpacing: '0.05em',
@@ -143,7 +143,7 @@ export default function AdminCasesPage() {
             <tbody>
               {cases.length === 0 ? (
                 <tr>
-                  <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: '#5a6070', fontSize: '13px' }}>
+                  <td colSpan={7} style={{ padding: '40px', textAlign: 'center', color: 'var(--dim)', fontSize: '13px' }}>
                     사건이 없습니다. New Case를 눌러 추가하세요.
                   </td>
                 </tr>
@@ -151,13 +151,13 @@ export default function AdminCasesPage() {
                 cases.map((c) => (
                   <tr
                     key={c.id}
-                    style={{ borderBottom: '1px solid #1e2230' }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = '#1a1e28'; }}
+                    style={{ borderBottom: '1px solid var(--surface-3)' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--surface-3)'; }}
                     onMouseLeave={(e) => { (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'; }}
                   >
                     <td style={{ padding: '13px 16px' }}>
-                      <div style={{ color: '#e8eaf0', fontSize: '13px', fontWeight: 500 }}>{c.title}</div>
-                      <div style={{ color: '#5a6070', fontSize: '11px', marginTop: '2px' }}>{c.id}</div>
+                      <div style={{ color: 'var(--fg)', fontSize: '13px', fontWeight: 500 }}>{c.title}</div>
+                      <div style={{ color: 'var(--dim)', fontSize: '11px', marginTop: '2px' }}>{c.id}</div>
                     </td>
                     <td style={{ padding: '13px 16px' }}>
                       <span
@@ -168,23 +168,23 @@ export default function AdminCasesPage() {
                           fontSize: '11px',
                           fontWeight: 600,
                           background: c.status === 'published' ? 'rgba(34,197,94,0.12)' : 'rgba(107,114,128,0.15)',
-                          color: c.status === 'published' ? '#4ade80' : '#6b7280',
+                          color: c.status === 'published' ? 'var(--success)' : 'var(--gray)',
                           border: `1px solid ${c.status === 'published' ? 'rgba(34,197,94,0.25)' : 'rgba(107,114,128,0.25)'}`,
                         }}
                       >
                         {c.status === 'published' ? 'PUBLISHED' : 'DRAFT'}
                       </span>
                     </td>
-                    <td style={{ padding: '13px 16px', color: '#c8a24e', fontSize: '13px' }}>
+                    <td style={{ padding: '13px 16px', color: 'var(--accent)', fontSize: '13px' }}>
                       {DIFFICULTY_LABELS[c.difficulty] || c.difficulty}
                     </td>
-                    <td style={{ padding: '13px 16px', color: '#8b92a0', fontSize: '13px' }}>
+                    <td style={{ padding: '13px 16px', color: 'var(--muted)', fontSize: '13px' }}>
                       {(c.images || []).length}
                     </td>
-                    <td style={{ padding: '13px 16px', color: '#8b92a0', fontSize: '13px' }}>
+                    <td style={{ padding: '13px 16px', color: 'var(--muted)', fontSize: '13px' }}>
                       {c.play_count ?? 0}
                     </td>
-                    <td style={{ padding: '13px 16px', color: '#8b92a0', fontSize: '13px' }}>
+                    <td style={{ padding: '13px 16px', color: 'var(--muted)', fontSize: '13px' }}>
                       {c.flag_count ?? 0}
                     </td>
                     <td style={{ padding: '13px 16px' }}>
@@ -197,8 +197,8 @@ export default function AdminCasesPage() {
                             alignItems: 'center',
                             padding: '6px',
                             borderRadius: '4px',
-                            background: 'rgba(200,162,78,0.08)',
-                            color: '#c8a24e',
+                            background: 'color-mix(in srgb, var(--accent) 8%, transparent)',
+                            color: 'var(--accent)',
                             textDecoration: 'none',
                           }}
                         >
@@ -213,7 +213,7 @@ export default function AdminCasesPage() {
                             padding: '6px',
                             borderRadius: '4px',
                             background: 'rgba(99,102,241,0.08)',
-                            color: '#818cf8',
+                            color: 'var(--info)',
                             textDecoration: 'none',
                           }}
                         >
@@ -229,7 +229,7 @@ export default function AdminCasesPage() {
                             padding: '6px',
                             borderRadius: '4px',
                             background: c.status === 'published' ? 'rgba(34,197,94,0.08)' : 'rgba(107,114,128,0.1)',
-                            color: c.status === 'published' ? '#4ade80' : '#6b7280',
+                            color: c.status === 'published' ? 'var(--success)' : 'var(--gray)',
                             border: 'none',
                             cursor: 'pointer',
                           }}
@@ -246,7 +246,7 @@ export default function AdminCasesPage() {
                             padding: '6px',
                             borderRadius: '4px',
                             background: 'rgba(220,38,38,0.08)',
-                            color: '#f87171',
+                            color: 'var(--danger-fg)',
                             border: 'none',
                             cursor: 'pointer',
                           }}

@@ -32,20 +32,20 @@ export default function AdminHistoryPage() {
   }, []);
 
   if (loading) {
-    return <div style={{ padding: 40, color: '#8b8d93' }}>불러오는 중...</div>;
+    return <div style={{ padding: 40, color: 'var(--muted)' }}>불러오는 중...</div>;
   }
 
   return (
-    <div style={{ padding: 40, color: '#e8eaf0' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: '#c8a24e', marginBottom: 8 }}>
+    <div style={{ padding: 40, color: 'var(--fg)' }}>
+      <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--accent)', marginBottom: 8 }}>
         플레이 기록
       </h1>
-      <p style={{ color: '#5a6070', fontSize: 13, marginBottom: 24 }}>
+      <p style={{ color: 'var(--dim)', fontSize: 13, marginBottom: 24 }}>
         총 {records.length}건의 기록
       </p>
 
       {records.length === 0 ? (
-        <p style={{ color: '#5a6070' }}>아직 기록이 없습니다.</p>
+        <p style={{ color: 'var(--dim)' }}>아직 기록이 없습니다.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {records.map((r) => {
@@ -54,8 +54,8 @@ export default function AdminHistoryPage() {
               <div
                 key={r.id}
                 style={{
-                  background: '#12151c',
-                  border: '1px solid #2a2e38',
+                  background: 'var(--surface)',
+                  border: '1px solid var(--border)',
                   borderRadius: 8,
                   overflow: 'hidden',
                 }}
@@ -72,7 +72,7 @@ export default function AdminHistoryPage() {
                     background: 'transparent',
                     border: 'none',
                     cursor: 'pointer',
-                    color: '#e8eaf0',
+                    color: 'var(--fg)',
                     textAlign: 'left',
                   }}
                 >
@@ -83,8 +83,8 @@ export default function AdminHistoryPage() {
                       borderRadius: 4,
                       fontSize: 11,
                       fontWeight: 700,
-                      background: r.solved ? '#3a7d44' : '#8b3a3a',
-                      color: '#fff',
+                      background: r.solved ? 'var(--yes)' : 'var(--no)',
+                      color: 'var(--on-solid)',
                       flexShrink: 0,
                     }}
                   >
@@ -98,41 +98,41 @@ export default function AdminHistoryPage() {
 
                   {/* Rank */}
                   {r.rank && (
-                    <span style={{ fontSize: 12, color: '#c8a24e', fontWeight: 700 }}>
+                    <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700 }}>
                       {r.rank}랭크
                     </span>
                   )}
 
                   {/* Score */}
                   {r.score !== undefined && (
-                    <span style={{ fontSize: 12, color: '#8b8d93' }}>
+                    <span style={{ fontSize: 12, color: 'var(--muted)' }}>
                       {r.score}점
                     </span>
                   )}
 
                   {/* Questions count */}
-                  <span style={{ fontSize: 11, color: '#5a6070' }}>
+                  <span style={{ fontSize: 11, color: 'var(--dim)' }}>
                     Q{r.totalQuestions}
                   </span>
 
                   {/* Time */}
-                  <span style={{ fontSize: 11, color: '#5a6070', flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: 'var(--dim)', flexShrink: 0 }}>
                     {new Date(r.finishedAt).toLocaleString('ko-KR')}
                   </span>
 
                   {/* IP */}
-                  <span style={{ fontSize: 10, color: '#3a3d45', flexShrink: 0 }}>
+                  <span style={{ fontSize: 10, color: 'var(--border-strong)', flexShrink: 0 }}>
                     {r.ip.split(',')[0]}
                   </span>
 
-                  {isExpanded ? <ChevronUp size={14} color="#5a6070" /> : <ChevronDown size={14} color="#5a6070" />}
+                  {isExpanded ? <ChevronUp size={14} color="var(--dim)" /> : <ChevronDown size={14} color="var(--dim)" />}
                 </button>
 
                 {/* Detail */}
                 {isExpanded && (
-                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid #2a2e38' }}>
+                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--border)' }}>
                     {/* Stats */}
-                    <div style={{ display: 'flex', gap: 16, padding: '12px 0', fontSize: 12, color: '#8b8d93' }}>
+                    <div style={{ display: 'flex', gap: 16, padding: '12px 0', fontSize: 12, color: 'var(--muted)' }}>
                       <span>정확도: {r.accuracy ?? '-'}%</span>
                       <span>남은 질문: {r.tokensLeft}</span>
                       <span>질문 수: {r.totalQuestions}</span>
@@ -141,7 +141,7 @@ export default function AdminHistoryPage() {
                     {/* Questions */}
                     {r.questions.length > 0 && (
                       <div style={{ marginBottom: 12 }}>
-                        <div style={{ fontSize: 11, color: '#5a6070', marginBottom: 6, fontWeight: 600 }}>질문 기록</div>
+                        <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 6, fontWeight: 600 }}>질문 기록</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           {r.questions.map((q, i) => (
                             <div
@@ -152,14 +152,14 @@ export default function AdminHistoryPage() {
                                 fontSize: 12,
                                 padding: '4px 8px',
                                 borderRadius: 4,
-                                background: '#0b0d11',
+                                background: 'var(--bg)',
                               }}
                             >
-                              <span style={{ color: '#5a6070', flexShrink: 0 }}>Q{i + 1}.</span>
-                              <span style={{ color: '#e8eaf0', flex: 1 }}>{q.text}</span>
+                              <span style={{ color: 'var(--dim)', flexShrink: 0 }}>Q{i + 1}.</span>
+                              <span style={{ color: 'var(--fg)', flex: 1 }}>{q.text}</span>
                               <span
                                 style={{
-                                  color: q.verdict === 'YES' ? '#3a7d44' : q.verdict === 'NO' ? '#8b3a3a' : '#8b7a3a',
+                                  color: q.verdict === 'YES' ? 'var(--yes)' : q.verdict === 'NO' ? 'var(--no)' : 'var(--maybe)',
                                   fontWeight: 700,
                                   fontSize: 11,
                                   flexShrink: 0,
@@ -175,12 +175,12 @@ export default function AdminHistoryPage() {
 
                     {/* Final answer */}
                     <div>
-                      <div style={{ fontSize: 11, color: '#5a6070', marginBottom: 6, fontWeight: 600 }}>최종 추리</div>
+                      <div style={{ fontSize: 11, color: 'var(--dim)', marginBottom: 6, fontWeight: 600 }}>최종 추리</div>
                       <div
                         style={{
                           fontSize: 12,
-                          color: '#e8eaf0',
-                          background: '#0b0d11',
+                          color: 'var(--fg)',
+                          background: 'var(--bg)',
                           padding: '8px 12px',
                           borderRadius: 4,
                           lineHeight: 1.6,
