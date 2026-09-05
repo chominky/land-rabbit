@@ -2,7 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Plus, Trash2, GripVertical, AlertTriangle, Download, Upload, ChevronUp, ChevronDown, Save } from 'lucide-react';
+import { Plus, Trash2, GripVertical, AlertTriangle, Download, Upload, ChevronUp, ChevronDown, Save, Check, X as XIcon, ShieldAlert, Loader2, Send } from 'lucide-react';
+import {
+  MIN_ACCEPT_EXAMPLES,
+  MIN_KEY_FACTS,
+  runPublishChecks,
+} from '@/lib/caseValidation';
+import { MAX_IMAGES, MIN_IMAGES } from '@/lib/gameConfig';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,6 +38,8 @@ type CaseForm = {
 
 const BRIEF_MAX = 500;
 
+type LeakResult = { leaked: boolean; reason: string } | { error: string };
+
 function newKeyFact(): KeyFact {
   return {
     id: crypto.randomUUID(),
@@ -44,21 +52,37 @@ function newKeyFact(): KeyFact {
   };
 }
 
-function validatePublish(form: CaseForm): string[] {
-  const errors: string[] = [];
-  const imageList = form.images.split('\n').map((s) => s.trim()).filter(Boolean);
-  if (imageList.length < 2 || imageList.length > 4) errors.push('이미지는 2~4개여야 합니다.');
-  if (form.keyFacts.length < 3) errors.push('keyFacts가 3개 이상이어야 합니다.');
+/** 발행 조건은 서버(PUT)와 같은 모듈로 검사한다. */
+function checksFor(form: CaseForm) {
+  return runPublishChecks({
+    brief: form.brief,
+    truth: form.truth,
+    images: form.images.split('\n').map((s) => s.trim()).filter(Boolean),
+    keyFacts: form.keyFacts,
+    hints: form.hints,
+  });
+}
+
+/** 섹션별 완료 여부 — 어디를 더 채워야 하는지 한눈에 보이게 한다. */
+function sectionProgress(form: CaseForm) {
+  const images = form.images.split('\n').map((x) => x.trim()).filter(Boolean);
   const required = form.keyFacts.filter((kf) => kf.required);
-  if (required.length < 1) errors.push('required keyFact가 최소 1개 필요합니다.');
-  for (const kf of required) {
-    if (!kf.mustConvey.trim()) errors.push(`"${kf.label || kf.id}" — mustConvey 필드를 채워주세요.`);
-    const accepts = kf.acceptExamples.filter(Boolean);
-    if (accepts.length < 3) errors.push(`"${kf.label || kf.id}" — acceptExamples 3개 이상 필요합니다.`);
-  }
-  const hints = form.hints.filter((h) => h.trim());
-  if (hints.length < 3) errors.push('힌트 3개를 모두 입력해야 합니다.');
-  return errors;
+  return [
+    { key: 'basic', label: '기본 정보', done: !!form.id.trim() && !!form.title.trim() },
+    { key: 'story', label: '개요·전말', done: !!form.brief.trim() && !!form.truth.trim() },
+    {
+      key: 'facts',
+      label: '핵심 요소',
+      done:
+        form.keyFacts.length >= MIN_KEY_FACTS &&
+        required.length >= 1 &&
+        required.every(
+          (kf) => kf.mustConvey.trim() && kf.acceptExamples.filter(Boolean).length >= MIN_ACCEPT_EXAMPLES
+        ),
+    },
+    { key: 'images', label: '삽화', done: images.length >= MIN_IMAGES && images.length <= MAX_IMAGES },
+    { key: 'hints', label: '힌트·오답유도', done: form.hints.filter((h) => h.trim()).length >= 3 },
+  ];
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -362,9 +386,19 @@ export default function CaseEditorPage() {
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
-  const [publishErrors, setPublishErrors] = useState<string[]>([]);
+  const [status, setStatus] = useState<'draft' | 'published'>('draft');
+  const [publishing, setPublishing] = useState(false);
+  const [publishNote, setPublishNote] = useState('');
+  const [leakLoading, setLeakLoading] = useState(false);
+  const [leak, setLeak] = useState<LeakResult | null>(null);
 
   const importRef = useRef<HTMLInputElement>(null);
+
+  const checks = checksFor(form);
+  const publishReady = checks.every((c) => c.ok);
+  const sections = sectionProgress(form);
+  const imagePaths = form.images.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+  const doneSections = sections.filter((sec) => sec.done).length;
 
   // Load existing case
   useEffect(() => {
@@ -387,6 +421,7 @@ export default function CaseEditorPage() {
           redHerrings: (data.redHerrings ?? data.red_herrings ?? []).join('\n'),
           images: (data.images ?? []).join('\n'),
         });
+        setStatus(data.status === 'published' ? 'published' : 'draft');
       })
       .finally(() => setLoading(false));
   }, [isNew, rawId]);
@@ -474,11 +509,71 @@ export default function CaseEditorPage() {
     }
   }
 
-  function checkPublish() {
-    const errors = validatePublish(form);
-    setPublishErrors(errors);
-    if (errors.length === 0) {
-      alert('Publish 조건 충족! Status를 published로 변경하고 저장하세요.');
+  /** 저장 -> 발행 순서로 진행한다. 서버가 같은 조건을 한 번 더 검사한다. */
+  async function publish() {
+    if (isNew) {
+      setPublishNote('먼저 저장한 뒤 발행할 수 있습니다.');
+      return;
+    }
+    setPublishing(true);
+    setPublishNote('');
+    try {
+      await save();
+      const res = await fetch(`/api/admin/cases/${rawId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'published' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const blockers: string[] = data.blockers ?? [];
+        setPublishNote(blockers.length ? blockers.join(' / ') : data.error || '발행에 실패했습니다.');
+        return;
+      }
+      setStatus('published');
+      setPublishNote('발행했습니다.');
+    } catch (err) {
+      setPublishNote(String(err));
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  async function unpublish() {
+    setPublishing(true);
+    setPublishNote('');
+    try {
+      const res = await fetch(`/api/admin/cases/${rawId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'draft' }),
+      });
+      if (!res.ok) throw new Error('발행 취소에 실패했습니다.');
+      setStatus('draft');
+      setPublishNote('발행을 취소했습니다.');
+    } catch (err) {
+      setPublishNote(String(err));
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  /** 개요가 전말을 누설하는지 AI로 확인한다 (편집 중인 값을 그대로 보낸다). */
+  async function runLeakCheck() {
+    setLeakLoading(true);
+    setLeak(null);
+    try {
+      const res = await fetch(`/api/admin/cases/${rawId || form.id}/leakcheck`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief: form.brief, truth: form.truth }),
+      });
+      const data = await res.json();
+      setLeak(res.ok ? data : { error: data.error || '검사에 실패했습니다.' });
+    } catch {
+      setLeak({ error: '검사를 실행하지 못했습니다.' });
+    } finally {
+      setLeakLoading(false);
     }
   }
 
@@ -515,7 +610,7 @@ export default function CaseEditorPage() {
           images: (data.images ?? []).join('\n'),
         });
       } catch {
-        alert('JSON 파싱 실패');
+        setSaveError('JSON 파싱에 실패했습니다. 파일 형식을 확인해주세요.');
       }
     };
     reader.readAsText(file);
@@ -553,12 +648,39 @@ export default function CaseEditorPage() {
           >
             <Download size={13} /> Export JSON
           </button>
-          <button
-            onClick={checkPublish}
-            style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)', color: 'var(--success)', padding: '8px 12px', borderRadius: '5px', cursor: 'pointer', fontSize: '12px' }}
-          >
-            Check Publish
-          </button>
+          {status === 'published' ? (
+            <button
+              onClick={unpublish}
+              disabled={publishing}
+              style={{ display: 'flex', alignItems: 'center', gap: '5px', background: 'var(--surface-3)', border: '1px solid var(--border)', color: 'var(--muted)', padding: '8px 12px', borderRadius: '5px', cursor: publishing ? 'not-allowed' : 'pointer', fontSize: '12px' }}
+            >
+              발행 취소
+            </button>
+          ) : (
+            <button
+              onClick={publish}
+              disabled={publishing || !publishReady || isNew}
+              title={
+                isNew
+                  ? '먼저 저장해야 발행할 수 있습니다.'
+                  : publishReady
+                    ? '저장 후 발행합니다.'
+                    : '아래 발행 조건을 모두 충족해야 합니다.'
+              }
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                background: publishReady && !isNew ? 'rgba(34,197,94,0.12)' : 'var(--surface-3)',
+                border: `1px solid ${publishReady && !isNew ? 'rgba(34,197,94,0.35)' : 'var(--border)'}`,
+                color: publishReady && !isNew ? 'var(--success)' : 'var(--dim)',
+                padding: '8px 12px', borderRadius: '5px',
+                cursor: publishing || !publishReady || isNew ? 'not-allowed' : 'pointer',
+                fontSize: '12px',
+              }}
+            >
+              {publishing ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+              발행
+            </button>
+          )}
           <button
             onClick={save}
             disabled={saving}
@@ -576,14 +698,113 @@ export default function CaseEditorPage() {
         </div>
       )}
 
-      {publishErrors.length > 0 && (
-        <div style={{ background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.25)', borderRadius: '6px', padding: '12px 16px', marginBottom: '20px' }}>
-          <div style={{ color: 'var(--warning)', fontSize: '12px', fontWeight: 700, marginBottom: '6px' }}>Publish 조건 미충족:</div>
-          {publishErrors.map((e) => (
-            <div key={e} style={{ color: 'var(--warning)', fontSize: '12px', marginBottom: '3px' }}>• {e}</div>
-          ))}
+      {publishNote && (
+        <div
+          style={{
+            background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: '6px', padding: '10px 14px', color: 'var(--muted)',
+            fontSize: '12px', marginBottom: '16px',
+          }}
+        >
+          {publishNote}
         </div>
       )}
+
+      {/* 섹션 진행 표시 */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+        {sections.map((sec) => (
+          <span
+            key={sec.key}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '5px',
+              fontSize: '11px', padding: '5px 10px', borderRadius: '999px',
+              background: sec.done ? 'rgba(34,197,94,0.1)' : 'var(--surface-3)',
+              border: `1px solid ${sec.done ? 'rgba(34,197,94,0.3)' : 'var(--border)'}`,
+              color: sec.done ? 'var(--success)' : 'var(--dim)',
+            }}
+          >
+            {sec.done ? <Check size={11} /> : <XIcon size={11} />}
+            {sec.label}
+          </span>
+        ))}
+        <span style={{ fontSize: '11px', color: 'var(--dim)', alignSelf: 'center', marginLeft: '4px' }}>
+          {doneSections}/{sections.length} 완료
+        </span>
+      </div>
+
+      {/* 발행 조건 + brief 누설 검사 */}
+      <div
+        style={{
+          display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+          gap: '16px', marginBottom: '20px',
+        }}
+      >
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: publishReady ? 'var(--success)' : 'var(--warning)', marginBottom: '10px' }}>
+            발행 조건 {checks.filter((c) => c.ok).length}/{checks.length}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {checks.map((c) => (
+              <div key={c.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '7px', fontSize: '12px' }}>
+                {c.ok
+                  ? <Check size={12} style={{ color: 'var(--success)', marginTop: 2, flexShrink: 0 }} />
+                  : <XIcon size={12} style={{ color: 'var(--warning)', marginTop: 2, flexShrink: 0 }} />}
+                <span style={{ color: c.ok ? 'var(--muted)' : 'var(--fg)' }}>
+                  {c.label}
+                  {!c.ok && c.detail && (
+                    <span style={{ color: 'var(--warning)', marginLeft: 6 }}>— {c.detail}</span>
+                  )}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--muted)' }}>개요 누설 검사</div>
+            <button
+              onClick={runLeakCheck}
+              disabled={leakLoading || !form.brief.trim() || !form.truth.trim()}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '5px',
+                background: 'var(--surface-3)', border: '1px solid var(--border)',
+                color: 'var(--muted)', padding: '5px 10px', borderRadius: '4px',
+                cursor: leakLoading ? 'not-allowed' : 'pointer', fontSize: '11px',
+              }}
+            >
+              {leakLoading ? <Loader2 size={11} className="animate-spin" /> : <ShieldAlert size={11} />}
+              검사 실행
+            </button>
+          </div>
+          {!leak && !leakLoading && (
+            <p style={{ fontSize: '11px', color: 'var(--dim)', margin: 0, lineHeight: 1.6 }}>
+              개요가 전말의 반전이나 정답을 직접 드러내는지 AI로 확인합니다.
+              발행 전에 한 번 실행해 보세요.
+            </p>
+          )}
+          {leak && 'error' in leak && (
+            <p style={{ fontSize: '12px', color: 'var(--danger-fg)', margin: 0 }}>{leak.error}</p>
+          )}
+          {leak && !('error' in leak) && (
+            <div>
+              <div
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  fontSize: '12px', fontWeight: 700, marginBottom: '6px',
+                  color: leak.leaked ? 'var(--danger-fg)' : 'var(--success)',
+                }}
+              >
+                {leak.leaked ? <AlertTriangle size={12} /> : <Check size={12} />}
+                {leak.leaked ? '누설 의심' : '누설 없음'}
+              </div>
+              <p style={{ fontSize: '12px', color: 'var(--muted)', margin: 0, lineHeight: 1.6 }}>
+                {leak.reason}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Two-column layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
@@ -721,8 +942,55 @@ export default function CaseEditorPage() {
                 placeholder={`cases/my-case/image1.jpg\ncases/my-case/image2.jpg`}
               />
               <div style={{ color: 'var(--dim)', fontSize: '11px', marginTop: '4px' }}>
-                현재 {form.images.split('\n').filter((s) => s.trim()).length}개
+                현재 {imagePaths.length}개 · 파일 DB 모드에서는{' '}
+                <code>public/cases/{form.id || '<id>'}/</code> 아래 파일을, Supabase에서는{' '}
+                <code>case-images</code> 버킷 경로를 가리킵니다.
               </div>
+
+              {/* 경로가 실제로 무엇을 가리키는지 눈으로 확인한다 */}
+              {imagePaths.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginTop: '10px' }}>
+                  {imagePaths.map((src, i) => (
+                    <div key={`${src}-${i}`} style={{ width: '104px' }}>
+                      <div
+                        style={{
+                          width: '104px', height: '78px', borderRadius: '4px',
+                          border: '1px solid var(--border)', background: 'var(--surface-3)',
+                          overflow: 'hidden', position: 'relative',
+                        }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={src.startsWith('http') || src.startsWith('/') ? src : `/${src}`}
+                          alt={`삽화 ${i + 1} 미리보기`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => {
+                            const el = e.currentTarget;
+                            el.style.display = 'none';
+                            const sib = el.nextElementSibling as HTMLElement | null;
+                            if (sib) sib.style.display = 'flex';
+                          }}
+                        />
+                        <span
+                          style={{
+                            display: 'none', position: 'absolute', inset: 0,
+                            alignItems: 'center', justifyContent: 'center',
+                            fontSize: '10px', color: 'var(--dim)', textAlign: 'center', padding: '4px',
+                          }}
+                        >
+                          불러올 수 없음
+                        </span>
+                      </div>
+                      <div
+                        style={{ fontSize: '10px', color: 'var(--dim)', marginTop: '3px', wordBreak: 'break-all' }}
+                        title={src}
+                      >
+                        {i + 1}. {src.split('/').pop()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </Field>
           </div>
         </div>

@@ -54,10 +54,21 @@ export default function AdminCasesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       });
-      if (!res.ok) throw new Error('Failed');
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // 서버가 발행 조건 미달 사유를 돌려준다 (P3-B).
+        const blockers: string[] = data.blockers ?? [];
+        setError(
+          blockers.length
+            ? `"${c.title}" 발행 불가 — ${blockers.join(' / ')}`
+            : data.error || '상태 변경에 실패했습니다.'
+        );
+        return;
+      }
+      setError('');
       setCases((prev) => prev.map((x) => x.id === c.id ? { ...x, status: newStatus } : x));
     } catch {
-      alert('상태 변경 실패');
+      setError('상태 변경에 실패했습니다.');
     } finally {
       setActionLoading(null);
     }
