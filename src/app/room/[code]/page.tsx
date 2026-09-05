@@ -565,10 +565,10 @@ export default function RoomPage() {
       : '';
 
     return (
-      <div className="min-h-screen flex flex-col" style={{ background: BG }}>
+      <div className="h-dvh flex flex-col overflow-hidden" style={{ background: BG }}>
         {/* Header */}
         <header
-          className="flex items-center gap-3 px-4 py-3 border-b"
+          className="flex items-center gap-3 px-4 py-3 border-b shrink-0"
           style={{ background: CARD, borderColor: BORDER }}
         >
           <button onClick={handleLeave} className="flex items-center gap-1 text-sm" style={{ color: MUTED }}>
@@ -1192,7 +1192,11 @@ export default function RoomPage() {
             {/* Input area */}
             <div
               className="shrink-0 p-4 border-t space-y-2"
-              style={{ background: CARD, borderColor: BORDER }}
+              style={{
+                background: CARD,
+                borderColor: BORDER,
+                paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
+              }}
             >
               {/* Versus mode: spectating selector when finished */}
               {isVersus && isMeFinished && !spectatingId && (
@@ -1272,7 +1276,7 @@ export default function RoomPage() {
                       }
                       disabled={!canAsk || asking}
                       maxLength={MAX_QUESTION_LENGTH}
-                      className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none disabled:opacity-40"
+                      className="flex-1 min-w-0 px-3 py-2 rounded-lg border text-base sm:text-sm outline-none disabled:opacity-40"
                       style={{ background: CARD2, borderColor: BORDER, color: TEXT }}
                     />
                     <button
@@ -1304,7 +1308,7 @@ export default function RoomPage() {
             style={{ background: 'var(--scrim)' }}
           >
             <div
-              className="w-full max-w-lg rounded-xl border p-6"
+              className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl border p-6"
               style={{ background: CARD, borderColor: BORDER }}
             >
               <div className="flex items-center justify-between mb-4">
@@ -1326,7 +1330,7 @@ export default function RoomPage() {
                   onChange={(e) => setFinalAnswer(e.target.value)}
                   placeholder="사건의 전말을 자유롭게 서술하세요…"
                   rows={6}
-                  className="w-full px-3 py-2 rounded-lg border text-sm outline-none resize-none"
+                  className="w-full px-3 py-2 rounded-lg border text-base sm:text-sm outline-none resize-none"
                   style={{ background: CARD2, borderColor: BORDER, color: TEXT }}
                 />
                 {finalError && (

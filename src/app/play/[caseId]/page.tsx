@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Send, Flag, Eye, Lightbulb, FileText, Lock, Unlock,
-  AlertTriangle, ChevronLeft, X, Trophy, ArrowRight
+  AlertTriangle, ChevronLeft, X, Trophy, ArrowRight, ChevronDown, ChevronUp
 } from 'lucide-react';
 import {
   INITIAL_TOKENS, COST_HINT, COST_PREVIEW, COST_WRONG_ANSWER,
@@ -52,6 +52,8 @@ export default function PlayPage() {
   const [hints, setHints] = useState<string[]>([]);
   const [showHintModal, setShowHintModal] = useState(false);
   const [imageOverlay, setImageOverlay] = useState<number | null>(null);
+  // 모바일에서만 의미가 있다 — lg 이상에서는 케이스 패널이 항상 보인다.
+  const [panelOpen, setPanelOpen] = useState(false);
   const logRef = useRef<HTMLDivElement>(null);
 
   // Load case and saved state
@@ -296,24 +298,58 @@ export default function PlayPage() {
   const mustFinalSubmit = state.tokens <= 0 && !state.solved && !state.gameOver && state.attemptsUsed < MAX_FINAL_ATTEMPTS;
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
+    <div className="h-dvh flex flex-col overflow-hidden" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
-        <button onClick={() => router.push('/cases')} className="flex items-center gap-1 text-sm" style={{ color: 'var(--muted)' }}>
-          <ChevronLeft size={16} /> 사건 목록
+      <header className="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+        <button onClick={() => router.push('/cases')} className="flex items-center gap-1 text-sm shrink-0" style={{ color: 'var(--muted)' }}>
+          <ChevronLeft size={16} /> <span className="hidden sm:inline">사건 목록</span>
         </button>
-        <h1 className="text-sm font-bold tracking-wider" style={{ color: 'var(--accent)' }}>
+        <h1 className="text-sm font-bold tracking-wider truncate" style={{ color: 'var(--accent)' }}>
           {caseInfo.title}
         </h1>
-        <div className="text-xs" style={{ color: 'var(--muted)' }}>
+        <div className="text-xs shrink-0" style={{ color: 'var(--muted)' }}>
           {'★'.repeat(caseInfo.difficulty)}{'☆'.repeat(5 - caseInfo.difficulty)}
         </div>
       </header>
 
-      {/* Main content - 2 column */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      {/* Mobile summary bar — 케이스 패널을 접어두고 로그·입력에 화면을 내준다 */}
+      <div
+        className="lg:hidden flex items-center justify-between gap-3 px-4 py-2 border-b shrink-0 text-xs"
+        style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
+      >
+        <button
+          type="button"
+          onClick={() => setPanelOpen((v) => !v)}
+          aria-expanded={panelOpen}
+          aria-controls="case-panel"
+          className="flex items-center gap-1 px-2 py-1 rounded border"
+          style={{ borderColor: 'var(--border)', color: 'var(--fg)', background: 'var(--surface-2)' }}
+        >
+          <FileText size={12} />
+          사건 정보
+          {panelOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        </button>
+        <div className="flex items-center gap-3 min-w-0">
+          <span style={{ color: 'var(--muted)' }}>
+            핵심 {state.revealedKeyFacts.length}/{caseInfo.keyFactLabels.length}
+          </span>
+          <span aria-live="polite">
+            <span style={{ color: 'var(--muted)' }}>남은 </span>
+            <b className={isTokensLow ? 'tokens-warning' : ''} style={{ color: isTokensLow ? 'var(--danger)' : 'var(--accent)' }}>
+              {state.tokens}Q
+            </b>
+          </span>
+        </div>
+      </div>
+
+      {/* Main content - 2 column (모바일에서는 패널이 로그 위에 겹친다) */}
+      <div className="flex-1 relative flex flex-col lg:flex-row min-h-0 overflow-hidden">
         {/* Left: Case panel */}
-        <div className="lg:w-[420px] flex-shrink-0 overflow-y-auto p-4 border-r" style={{ borderColor: 'var(--border)' }}>
+        <div
+          id="case-panel"
+          className={`${panelOpen ? 'block' : 'hidden'} lg:block absolute inset-0 z-30 lg:static lg:z-auto lg:w-[420px] flex-shrink-0 overflow-y-auto p-4 border-r`}
+          style={{ borderColor: 'var(--border)', background: 'var(--bg)' }}
+        >
           {/* Image gallery */}
           <div className="grid grid-cols-2 gap-2 mb-4">
             {Array.from({ length: caseInfo.imageCount }).map((_, i) => {
@@ -447,12 +483,22 @@ export default function PlayPage() {
               ))}
             </div>
           )}
+
+          {/* Mobile: 패널 닫기 */}
+          <button
+            type="button"
+            onClick={() => setPanelOpen(false)}
+            className="lg:hidden mt-4 w-full py-2 rounded-lg border text-sm"
+            style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--muted)' }}
+          >
+            닫고 심문으로 돌아가기
+          </button>
         </div>
 
         {/* Right: Question log */}
         <div className="flex-1 flex flex-col min-h-0">
           {/* Final submit button */}
-          <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+          <div className="flex items-center justify-between gap-2 px-4 py-2 border-b shrink-0" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
             <div className="text-xs" style={{ color: 'var(--muted)' }}>
               심문 기록 ({state.questions.length}건)
             </div>
@@ -522,7 +568,14 @@ export default function PlayPage() {
 
           {/* Input */}
           {mustFinalSubmit ? (
-            <div className="p-4 border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+            <div
+              className="p-4 border-t shrink-0"
+              style={{
+                borderColor: 'var(--border)',
+                background: 'var(--surface)',
+                paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
+              }}
+            >
               <div className="text-center">
                 <AlertTriangle size={24} className="mx-auto mb-2" style={{ color: 'var(--danger)' }} />
                 <p className="text-sm mb-2" style={{ color: 'var(--danger)' }}>질문이 소진되었습니다</p>
@@ -536,7 +589,14 @@ export default function PlayPage() {
               </div>
             </div>
           ) : (
-            <div className="p-4 border-t" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+            <div
+              className="p-4 border-t shrink-0"
+              style={{
+                borderColor: 'var(--border)',
+                background: 'var(--surface)',
+                paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
+              }}
+            >
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -546,7 +606,7 @@ export default function PlayPage() {
                   placeholder={canAskQuestion ? '예/아니오로 답할 수 있는 질문을 입력하세요...' : '게임이 종료되었습니다'}
                   disabled={!canAskQuestion || loading}
                   maxLength={MAX_QUESTION_LENGTH}
-                  className="flex-1 px-3 py-2 rounded-lg border text-sm outline-none disabled:opacity-30"
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg border text-base sm:text-sm outline-none disabled:opacity-30"
                   style={{ borderColor: 'var(--border)', background: 'var(--surface-2)', color: 'var(--fg)' }}
                 />
                 <button
@@ -570,7 +630,7 @@ export default function PlayPage() {
       {/* Final Answer Modal */}
       {showFinalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'var(--scrim)' }}>
-          <div className="w-full max-w-lg rounded-xl border p-6" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+          <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl border p-6" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-bold" style={{ color: 'var(--accent)' }}>최종 추리 제출</h2>
               <button onClick={() => setShowFinalModal(false)}>
@@ -688,7 +748,7 @@ export default function PlayPage() {
           style={{ background: 'var(--scrim-strong)' }}
           onClick={() => setImageOverlay(null)}
         >
-          <div className="max-w-2xl w-full rounded-xl overflow-hidden border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
+          <div className="max-w-2xl w-full max-h-[90dvh] overflow-auto rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
             {caseInfo.images?.[imageOverlay] ? (
               <img
                 src={caseInfo.images[imageOverlay]}
@@ -717,7 +777,7 @@ export default function PlayPage() {
           style={{ background: 'var(--scrim)' }}
           onClick={() => setShowHintModal(false)}
         >
-          <div className="max-w-md w-full rounded-xl p-6 border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
+          <div className="max-w-md w-full max-h-[90dvh] overflow-y-auto rounded-xl p-6 border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
             <Lightbulb size={24} className="mx-auto mb-2" style={{ color: 'var(--accent)' }} />
             <h3 className="text-center text-sm font-bold mb-3" style={{ color: 'var(--accent)' }}>
               힌트 {hints.length}
