@@ -19,6 +19,7 @@ import {
 } from '@/lib/types';
 import { T, alpha, VERDICT_TOKEN } from '@/lib/theme';
 import { useToast } from '@/components/Toast';
+import { Modal } from '@/components/Modal';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const BG     = T.bg;
@@ -64,6 +65,7 @@ function VerdictBadge({ verdict }: { verdict: Verdict }) {
     <span
       className="stamp text-on-solid shrink-0"
       style={{ background: VERDICT_BG[verdict] }}
+      aria-label={`판정: ${VERDICT_LABEL[verdict]}`}
     >
       {VERDICT_LABEL[verdict]}
     </span>
@@ -1310,18 +1312,21 @@ export default function RoomPage() {
         </div>
 
         {/* ── Final answer modal ─────────────────────────────────────────── */}
-        {showFinalModal && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style={{ background: 'var(--scrim)' }}
-          >
-            <div
-              className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl border p-6"
-              style={{ background: CARD, borderColor: BORDER }}
-            >
+        <Modal
+          open={showFinalModal}
+          onClose={() => { setShowFinalModal(false); setFinalError(null); }}
+          labelledBy="room-final-title"
+          className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl border p-6"
+          style={{ background: CARD, borderColor: BORDER }}
+        >
+          {showFinalModal && (
+            <>
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold" style={{ color: AMBER }}>최종 추리 제출</h2>
-                <button onClick={() => { setShowFinalModal(false); setFinalError(null); }}>
+                <h2 id="room-final-title" className="text-lg font-bold" style={{ color: AMBER }}>최종 추리 제출</h2>
+                <button
+                  onClick={() => { setShowFinalModal(false); setFinalError(null); }}
+                  aria-label="최종 추리 창 닫기"
+                >
                   <X size={20} style={{ color: MUTED }} />
                 </button>
               </div>
@@ -1354,9 +1359,9 @@ export default function RoomPage() {
                   {finalLoading ? '채점 중…' : '제출'}
                 </button>
               </form>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </Modal>
 
         {/* ── Verdict toast ──────────────────────────────────────────────── */}
         {verdictResult && (

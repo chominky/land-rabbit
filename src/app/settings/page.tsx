@@ -22,6 +22,7 @@ import {
   loadSettings,
   saveSettings,
 } from '@/lib/settings';
+import { Modal } from '@/components/Modal';
 
 
 function Toggle({
@@ -229,17 +230,17 @@ export default function SettingsPage() {
       </main>
 
       {/* Reset confirm modal */}
-      {showResetConfirm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ background: 'var(--scrim)', backdropFilter: 'blur(4px)' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowResetConfirm(false);
-          }}
-        >
-          <div className="w-full max-w-xs rounded-lg p-6 flex flex-col gap-4 border border-border bg-surface">
+      <Modal
+        open={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        labelledBy="reset-modal-title"
+        backdropStyle={{ backdropFilter: 'blur(4px)' }}
+        className="w-full max-w-xs rounded-lg p-6 flex flex-col gap-4 border border-border bg-surface"
+      >
+        {showResetConfirm && (
+          <>
             <div>
-              <h3 className="text-base font-semibold text-fg mb-1">저장 데이터 초기화</h3>
+              <h3 id="reset-modal-title" className="text-base font-semibold text-fg mb-1">저장 데이터 초기화</h3>
               <p className="text-xs text-muted leading-relaxed">
                 모든 단일 플레이 진행 상황과 기록이 영구적으로 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
               </p>
@@ -261,9 +262,9 @@ export default function SettingsPage() {
                 삭제
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       {/* Toast */}
       {toast && (

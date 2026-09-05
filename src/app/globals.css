@@ -276,3 +276,26 @@ body {
   .typing-dot { animation: none; opacity: 0.6; }
   .tokens-warning { animation: none; }
 }
+
+/*
+ * 키보드 포커스 링 (P2-B).
+ * 여러 입력에 Tailwind의 outline-none이 걸려 있어 포커스가 보이지 않았다.
+ * 요소 선택자 + :focus-visible이라 유틸리티 클래스를 덮어쓴다.
+ * 마우스 클릭에는 나타나지 않는다(:focus-visible).
+ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 모달 컨테이너는 프로그램적으로 포커스를 받으므로 링을 그리지 않는다. */
+[role="dialog"]:focus,
+[role="dialog"]:focus-visible {
+  outline: none;
+}

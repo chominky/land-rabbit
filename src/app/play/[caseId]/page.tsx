@@ -13,6 +13,7 @@ import {
 } from '@/lib/gameConfig';
 import { Verdict, CasePublicDTO, SinglePlayerState } from '@/lib/types';
 import { useToast } from '@/components/Toast';
+import { Modal } from '@/components/Modal';
 
 /** 스포일러 없는 일반형 예시. 첫 질문의 문턱을 낮추는 용도다. */
 const STARTER_QUESTIONS = [
@@ -384,9 +385,12 @@ export default function PlayPage() {
               const isRevealed = i < state.revealedImageCount;
               const imageSrc = caseInfo.images?.[i];
               return (
-                <div
+                <button
                   key={i}
-                  className="aspect-[4/3] rounded-lg overflow-hidden relative cursor-pointer border"
+                  type="button"
+                  disabled={!isRevealed}
+                  aria-label={isRevealed ? `단서 ${i + 1} 크게 보기` : `단서 ${i + 1} 잠김`}
+                  className="aspect-[4/3] rounded-lg overflow-hidden relative border disabled:cursor-default"
                   style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}
                   onClick={() => isRevealed && setImageOverlay(i)}
                 >
@@ -415,7 +419,7 @@ export default function PlayPage() {
                       공개
                     </span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
@@ -430,7 +434,12 @@ export default function PlayPage() {
           {/* Tokens */}
           <div className="mb-4 p-3 rounded-lg border text-center" style={{ borderColor: 'var(--border)', background: 'var(--surface-2)' }}>
             <div className="text-xs mb-1" style={{ color: 'var(--muted)' }}>남은 질문</div>
-            <div className={`text-3xl font-bold ${isTokensLow ? 'tokens-warning' : ''}`} style={{ color: isTokensLow ? 'var(--danger)' : 'var(--accent)' }}>
+            <div
+              className={`text-3xl font-bold ${isTokensLow ? 'tokens-warning' : ''}`}
+              style={{ color: isTokensLow ? 'var(--danger)' : 'var(--accent)' }}
+              aria-live="polite"
+              aria-label={`남은 질문 ${state.tokens}개`}
+            >
               {state.tokens}
             </div>
             <div className="text-xs mt-1" style={{ color: 'var(--dim)' }}>
@@ -475,7 +484,15 @@ export default function PlayPage() {
             <div className="text-xs mb-2" style={{ color: 'var(--muted)' }}>
               핵심 요소 {state.revealedKeyFacts.length} / {caseInfo.keyFactLabels.length} 밝혀짐
             </div>
-            <div className="w-full h-2 rounded-full mb-2" style={{ background: 'var(--border)' }}>
+            <div
+              className="w-full h-2 rounded-full mb-2"
+              style={{ background: 'var(--border)' }}
+              role="progressbar"
+              aria-valuemin={0}
+              aria-valuemax={caseInfo.keyFactLabels.length}
+              aria-valuenow={state.revealedKeyFacts.length}
+              aria-label="핵심 요소 진행도"
+            >
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -573,7 +590,10 @@ export default function PlayPage() {
                     {q.text}
                   </p>
                   <div className="flex items-center gap-1">
-                    <span className={`stamp ${VERDICT_COLORS[q.verdict]} text-on-solid`}>
+                    <span
+                      className={`stamp ${VERDICT_COLORS[q.verdict]} text-on-solid`}
+                      aria-label={`판정: ${VERDICT_LABELS[q.verdict]}`}
+                    >
                       {VERDICT_LABELS[q.verdict]}
                     </span>
                     <button
@@ -587,6 +607,7 @@ export default function PlayPage() {
                       }}
                       className="p-1 rounded opacity-30 hover:opacity-100"
                       title="판정 신고"
+                      aria-label={`Q${i + 1} 판정 신고`}
                     >
                       <Flag size={12} style={{ color: 'var(--danger)' }} />
                     </button>
@@ -687,12 +708,18 @@ export default function PlayPage() {
       </div>
 
       {/* Final Answer Modal */}
-      {showFinalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'var(--scrim)' }}>
-          <div className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl border p-6" style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}>
+      <Modal
+        open={showFinalModal}
+        onClose={() => setShowFinalModal(false)}
+        labelledBy="final-modal-title"
+        className="w-full max-w-lg max-h-[90dvh] overflow-y-auto rounded-xl border p-6"
+        style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
+      >
+        {showFinalModal && (
+          <>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold" style={{ color: 'var(--accent)' }}>최종 추리 제출</h2>
-              <button onClick={() => setShowFinalModal(false)}>
+              <h2 id="final-modal-title" className="text-lg font-bold" style={{ color: 'var(--accent)' }}>최종 추리 제출</h2>
+              <button onClick={() => setShowFinalModal(false)} aria-label="최종 추리 창 닫기">
                 <X size={20} style={{ color: 'var(--muted)' }} />
               </button>
             </div>
@@ -716,9 +743,9 @@ export default function PlayPage() {
             >
               {finalLoading ? '채점 중...' : '제출'}
             </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
 
       {/* Result screen */}
       {showResult && resultData && (
@@ -801,13 +828,16 @@ export default function PlayPage() {
       )}
 
       {/* Image overlay */}
-      {imageOverlay !== null && (
-        <div
-          className="fixed inset-0 z-40 flex items-center justify-center p-8"
-          style={{ background: 'var(--scrim-strong)' }}
-          onClick={() => setImageOverlay(null)}
-        >
-          <div className="max-w-2xl w-full max-h-[90dvh] overflow-auto rounded-xl border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
+      <Modal
+        open={imageOverlay !== null}
+        onClose={() => setImageOverlay(null)}
+        label={imageOverlay !== null ? `단서 ${imageOverlay + 1} 크게 보기` : undefined}
+        backdropStyle={{ background: 'var(--scrim-strong)' }}
+        className="max-w-2xl w-full max-h-[90dvh] overflow-auto rounded-xl border"
+        style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}
+      >
+        {imageOverlay !== null && (
+          <>
             {caseInfo.images?.[imageOverlay] ? (
               <img
                 src={caseInfo.images[imageOverlay]}
@@ -822,31 +852,46 @@ export default function PlayPage() {
                 </p>
               </div>
             )}
-            <p className="text-xs text-center py-3" style={{ color: 'var(--dim)' }}>
-              클릭하여 닫기
-            </p>
-          </div>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => setImageOverlay(null)}
+              className="w-full text-xs text-center py-3"
+              style={{ color: 'var(--dim)' }}
+            >
+              닫기 (Esc)
+            </button>
+          </>
+        )}
+      </Modal>
 
       {/* Hint modal */}
-      {showHintModal && hints.length > 0 && (
-        <div
-          className="fixed inset-0 z-40 flex items-center justify-center p-4"
-          style={{ background: 'var(--scrim)' }}
-          onClick={() => setShowHintModal(false)}
-        >
-          <div className="max-w-md w-full max-h-[90dvh] overflow-y-auto rounded-xl p-6 border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}>
+      <Modal
+        open={showHintModal && hints.length > 0}
+        onClose={() => setShowHintModal(false)}
+        labelledBy="hint-modal-title"
+        className="max-w-md w-full max-h-[90dvh] overflow-y-auto rounded-xl p-6 border"
+        style={{ borderColor: 'color-mix(in srgb, var(--accent) 20%, transparent)', background: 'var(--surface)' }}
+      >
+        {hints.length > 0 && (
+          <>
             <Lightbulb size={24} className="mx-auto mb-2" style={{ color: 'var(--accent)' }} />
-            <h3 className="text-center text-sm font-bold mb-3" style={{ color: 'var(--accent)' }}>
+            <h3 id="hint-modal-title" className="text-center text-sm font-bold mb-3" style={{ color: 'var(--accent)' }}>
               힌트 {hints.length}
             </h3>
             <p className="text-sm text-center" style={{ color: 'var(--fg)' }}>
               {hints[hints.length - 1]}
             </p>
-          </div>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => setShowHintModal(false)}
+              className="mt-4 w-full py-2 rounded-lg border text-sm"
+              style={{ borderColor: 'var(--border)', color: 'var(--muted)' }}
+            >
+              닫기 (Esc)
+            </button>
+          </>
+        )}
+      </Modal>
     </div>
   );
 }

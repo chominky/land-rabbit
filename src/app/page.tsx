@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FileText, Users, FolderOpen, Settings, ArrowUp, ArrowDown } from 'lucide-react';
+import { Modal } from '@/components/Modal';
 
 interface MenuItem {
   label: string;
@@ -21,6 +22,13 @@ export default function HomePage() {
   const [nickname, setNickname] = useState('');
   const [joinError, setJoinError] = useState('');
   const [joining, setJoining] = useState(false);
+
+  const closeRoomModal = useCallback(() => {
+    setShowRoomModal(false);
+    setRoomCode('');
+    setNickname('');
+    setJoinError('');
+  }, []);
 
   useEffect(() => {
     try {
@@ -223,37 +231,25 @@ export default function HomePage() {
       </div>
 
       {/* Room Join Modal */}
-      {showRoomModal && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style={{ background: 'var(--scrim)', backdropFilter: 'blur(4px)' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setShowRoomModal(false);
-              setRoomCode('');
-              setNickname('');
-              setJoinError('');
-            }
-          }}
-        >
-          <div
-            className="w-full max-w-xs rounded-lg p-6 flex flex-col gap-4"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-          >
+      <Modal
+        open={showRoomModal}
+        onClose={closeRoomModal}
+        labelledBy="join-modal-title"
+        backdropStyle={{ backdropFilter: 'blur(4px)' }}
+        className="w-full max-w-xs rounded-lg p-6 flex flex-col gap-4"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      >
+        {showRoomModal && (
+          <>
             <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-base" style={{ color: 'var(--fg)' }}>
+              <h2 id="join-modal-title" className="font-semibold text-base" style={{ color: 'var(--fg)' }}>
                 방 참가
               </h2>
               <button
-                onClick={() => {
-                  setShowRoomModal(false);
-                  setRoomCode('');
-                  setNickname('');
-                  setJoinError('');
-                }}
+                onClick={closeRoomModal}
                 className="text-lg leading-none"
                 style={{ color: 'var(--dim)' }}
-                aria-label="닫기"
+                aria-label="방 참가 창 닫기"
               >
                 ✕
               </button>
@@ -271,7 +267,7 @@ export default function HomePage() {
                   onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
                   placeholder="예: ABCD12"
                   maxLength={8}
-                  autoFocus
+                  data-autofocus
                   className="rounded px-3 py-2 text-sm font-mono outline-none focus:ring-1"
                   style={{
                     background: 'var(--bg)',
@@ -334,9 +330,9 @@ export default function HomePage() {
             >
               {joining ? '연결 중…' : '입장하기'}
             </button>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }
