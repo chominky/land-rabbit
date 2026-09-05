@@ -271,7 +271,7 @@ export default function RoomCreatePage() {
                   <div className="text-center">
                     <div className="text-sm font-bold">대결</div>
                     <div className="text-[10px] mt-0.5" style={{ color: mode === 'versus' ? `${AMBER}aa` : DIM }}>
-                      턴제 경쟁
+                      각자 추리 경쟁
                     </div>
                   </div>
                   {mode === 'versus' && (
