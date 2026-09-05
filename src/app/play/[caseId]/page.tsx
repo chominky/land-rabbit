@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Send, Flag, Eye, Lightbulb, FileText, Lock, Unlock,
@@ -14,6 +14,10 @@ import {
 import { Verdict, CasePublicDTO, SinglePlayerState } from '@/lib/types';
 import { useToast } from '@/components/Toast';
 import { Modal } from '@/components/Modal';
+import { Onboarding, shouldShowOnboarding } from '@/components/Onboarding';
+
+/** useSyncExternalStore용 — 구독할 외부 저장소가 없다. */
+const noopSubscribe = () => () => {};
 
 /** 스포일러 없는 일반형 예시. 첫 질문의 문턱을 낮추는 용도다. */
 const STARTER_QUESTIONS = [
@@ -64,6 +68,10 @@ export default function PlayPage() {
   const [imageOverlay, setImageOverlay] = useState<number | null>(null);
   // 모바일에서만 의미가 있다 — lg 이상에서는 케이스 패널이 항상 보인다.
   const [panelOpen, setPanelOpen] = useState(false);
+  // 서버 스냅샷은 항상 false라 하이드레이션이 어긋나지 않는다.
+  const isFirstVisit = useSyncExternalStore(noopSubscribe, shouldShowOnboarding, () => false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const showOnboarding = isFirstVisit && !onboardingDismissed;
   const logRef = useRef<HTMLDivElement>(null);
 
   // Load case and saved state
@@ -863,6 +871,9 @@ export default function PlayPage() {
           </>
         )}
       </Modal>
+
+      {/* 첫 플레이 규칙 안내 */}
+      <Onboarding open={showOnboarding} onClose={() => setOnboardingDismissed(true)} />
 
       {/* Hint modal */}
       <Modal
