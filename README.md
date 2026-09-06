@@ -32,6 +32,7 @@ cp .env.example .env.local
 
 1. Supabase 프로젝트를 생성합니다
 2. `supabase/schema.sql`을 SQL Editor에서 실행합니다
+   (재실행 안전합니다 — 스키마를 바꾼 뒤에도 같은 파일 전체를 다시 실행하면 됩니다)
 3. Storage에서 `case-images` 버킷을 **비공개**로 생성합니다
 4. Realtime을 활성화합니다 (rooms, room_players, room_questions, room_events 테이블)
 

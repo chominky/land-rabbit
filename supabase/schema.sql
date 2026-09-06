@@ -1,3 +1,7 @@
+-- 이 파일은 **재실행 안전**하다. 스키마를 바꿀 때마다 전체를 Supabase SQL 편집기에
+-- 붙여넣어 적용하면 된다 (CREATE ... IF NOT EXISTS + DROP POLICY IF EXISTS 조합).
+-- 새 정책을 추가할 때도 반드시 앞에 DROP POLICY IF EXISTS를 함께 넣을 것.
+
 -- Cases table
 CREATE TABLE IF NOT EXISTS cases (
   id text PRIMARY KEY,
@@ -22,6 +26,7 @@ CREATE TABLE IF NOT EXISTS cases (
 
 -- RLS: block all anonymous reads on cases (truth must never leak)
 ALTER TABLE cases ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "No anonymous access" ON cases;
 CREATE POLICY "No anonymous access" ON cases FOR ALL USING (false);
 
 -- Golden tests for judge regression
@@ -36,6 +41,7 @@ CREATE TABLE IF NOT EXISTS case_golden_tests (
 );
 
 ALTER TABLE case_golden_tests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "No anonymous access" ON case_golden_tests;
 CREATE POLICY "No anonymous access" ON case_golden_tests FOR ALL USING (false);
 
 -- Rooms
@@ -58,8 +64,11 @@ CREATE TABLE IF NOT EXISTS rooms (
 
 ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 -- Anyone with room code can read
+DROP POLICY IF EXISTS "Room read by code" ON rooms;
 CREATE POLICY "Room read by code" ON rooms FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Room insert" ON rooms;
 CREATE POLICY "Room insert" ON rooms FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Room update" ON rooms;
 CREATE POLICY "Room update" ON rooms FOR UPDATE USING (true);
 
 -- Room players
@@ -79,9 +88,13 @@ CREATE TABLE IF NOT EXISTS room_players (
 );
 
 ALTER TABLE room_players ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Players read" ON room_players;
 CREATE POLICY "Players read" ON room_players FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Players insert" ON room_players;
 CREATE POLICY "Players insert" ON room_players FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Players update" ON room_players;
 CREATE POLICY "Players update" ON room_players FOR UPDATE USING (true);
+DROP POLICY IF EXISTS "Players delete" ON room_players;
 CREATE POLICY "Players delete" ON room_players FOR DELETE USING (true);
 
 -- Room questions
@@ -98,8 +111,11 @@ CREATE TABLE IF NOT EXISTS room_questions (
 );
 
 ALTER TABLE room_questions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Questions read" ON room_questions;
 CREATE POLICY "Questions read" ON room_questions FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Questions insert" ON room_questions;
 CREATE POLICY "Questions insert" ON room_questions FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Questions update" ON room_questions;
 CREATE POLICY "Questions update" ON room_questions FOR UPDATE USING (true);
 
 -- Room events
@@ -112,7 +128,9 @@ CREATE TABLE IF NOT EXISTS room_events (
 );
 
 ALTER TABLE room_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Events read" ON room_events;
 CREATE POLICY "Events read" ON room_events FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Events insert" ON room_events;
 CREATE POLICY "Events insert" ON room_events FOR INSERT WITH CHECK (true);
 
 -- Flags for review
@@ -140,6 +158,7 @@ ALTER TABLE flags ADD COLUMN IF NOT EXISTS resolution_note text;
 CREATE INDEX IF NOT EXISTS flags_status_idx ON flags(status);
 
 ALTER TABLE flags ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "No anonymous access" ON flags;
 CREATE POLICY "No anonymous access" ON flags FOR ALL USING (false);
 
 -- Single-player game history (admin stats source)
@@ -163,6 +182,7 @@ CREATE INDEX IF NOT EXISTS game_history_case_idx ON game_history(case_id);
 CREATE INDEX IF NOT EXISTS game_history_finished_idx ON game_history(finished_at DESC);
 
 ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "No anonymous access" ON game_history;
 CREATE POLICY "No anonymous access" ON game_history FOR ALL USING (false);
 
 -- Daily challenge leaderboard (P4-B)
@@ -192,6 +212,7 @@ CREATE INDEX IF NOT EXISTS daily_leaderboard_rank_idx
 
 ALTER TABLE daily_leaderboard ENABLE ROW LEVEL SECURITY;
 -- 조회도 서버 라우트를 거친다 (service role).
+DROP POLICY IF EXISTS "No anonymous access" ON daily_leaderboard;
 CREATE POLICY "No anonymous access" ON daily_leaderboard FOR ALL USING (false);
 
 -- ============================================
