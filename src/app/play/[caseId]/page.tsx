@@ -18,10 +18,14 @@ import { useToast } from '@/components/Toast';
 import { Modal } from '@/components/Modal';
 import { Onboarding, shouldShowOnboarding } from '@/components/Onboarding';
 import { loadNickname } from '@/lib/settings';
+import { feedback, primeAudio, verdictSfx } from '@/lib/sound';
 import { FactMark, ShareCardData, shareCardImage, shareResultText } from '@/lib/shareCard';
 
 /** useSyncExternalStore용 — 구독할 외부 저장소가 없다. */
 const noopSubscribe = () => () => {};
+
+/** 남은 질문이 이 아래로 떨어지면 경고 표시·경고음 (P4-C). */
+const LOW_TOKEN_WARNING = 10;
 
 /** 스포일러 없는 일반형 예시. 첫 질문의 문턱을 낮추는 용도다. */
 const STARTER_QUESTIONS = [
@@ -135,6 +139,8 @@ export default function PlayPage() {
     if (state.tokens < 1) return;
     if (state.solved || state.gameOver) return;
 
+    // 자동재생 정책상 오디오는 사용자 조작에서 깨워야 한다 (P4-C).
+    primeAudio();
     setLoading(true);
     try {
       const res = await fetch('/api/judge', {
@@ -162,6 +168,14 @@ export default function PlayPage() {
       if (data.cached) {
         toast('이미 물어본 질문입니다. 질문은 차감되지 않았습니다.');
         return;
+      }
+
+      // 판정 도장이 찍히는 순간의 소리·진동 (P4-C).
+      feedback(verdictSfx(data.verdict));
+      // 토큰 경고선을 막 넘은 순간에만 한 번 알린다.
+      const tokensLeft = (data.tokensLeft ?? state.tokens) as number;
+      if (state.tokens > LOW_TOKEN_WARNING && tokensLeft <= LOW_TOKEN_WARNING) {
+        feedback('token-low');
       }
 
       setState((prev) => {
@@ -195,6 +209,7 @@ export default function PlayPage() {
       setQuestion('');
 
       if (data.imageUnlocked) {
+        feedback('unlock');
         setImageOverlay(data.revealedImageCount - 1);
         setTimeout(() => setImageOverlay(null), 3000);
       }
@@ -210,6 +225,7 @@ export default function PlayPage() {
 
   const submitFinalAnswer = async () => {
     if (!state || finalLoading || !finalAnswer.trim()) return;
+    primeAudio();
     setFinalLoading(true);
     try {
       const res = await fetch('/api/verdict', {
@@ -250,8 +266,10 @@ export default function PlayPage() {
       setShowFinalModal(false);
 
       if (data.solved || data.gameOver) {
+        feedback(data.solved ? 'clear' : 'fail');
         setShowResult(true);
       } else {
+        feedback('verdict-no');
         toast(data.feedback || '아직 부족합니다. 다시 시도해보세요.', {
           variant: 'error',
           duration: 7000,
@@ -369,7 +387,7 @@ export default function PlayPage() {
     if (outcome === 'copied') toast('결과를 클립보드에 복사했습니다.', { variant: 'success' });
     else toast('결과를 공유하지 못했습니다.', { variant: 'error' });
   }
-  const isTokensLow = state.tokens <= 10;
+  const isTokensLow = state.tokens <= LOW_TOKEN_WARNING;
   const canAskQuestion = state.tokens >= 1 && !state.solved && !state.gameOver;
   const mustFinalSubmit = state.tokens <= 0 && !state.solved && !state.gameOver && state.attemptsUsed < MAX_FINAL_ATTEMPTS;
 

@@ -23,6 +23,7 @@ import {
   saveSettings,
 } from '@/lib/settings';
 import { Modal } from '@/components/Modal';
+import { feedback, primeAudio } from '@/lib/sound';
 
 
 function Toggle({
@@ -99,13 +100,21 @@ export default function SettingsPage() {
   }
 
   function update(patch: Partial<AppSettings>) {
-    setSettings((prev) => {
-      const next = { ...prev, ...patch };
-      saveSettings(next);
-      applyTheme(next.theme);
-      // TODO(P4-C): sound/haptic 설정을 사운드·햅틱 재생 유틸에서 참조.
-      return next;
-    });
+    // 저장은 여기서 동기적으로 끝낸다. sound.ts가 매번 localStorage를 읽기 때문에,
+    // setState 업데이터 안에서 저장하면 아래 미리듣기가 옛 설정을 보게 된다.
+    const next = { ...settings, ...patch };
+    setSettings(next);
+    saveSettings(next);
+    applyTheme(next.theme);
+
+    // 켠 순간 어떤 소리·진동인지 바로 들려준다.
+    if (patch.sound) {
+      primeAudio();
+      feedback('verdict-yes');
+    }
+    if (patch.haptic) {
+      feedback('unlock');
+    }
   }
 
   function resetSaves() {
