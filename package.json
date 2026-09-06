@@ -8,7 +8,8 @@
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint",
     "seed": "npx tsx scripts/seed.ts",
-    "test:judge": "npx tsx scripts/test-judge.ts"
+    "test:judge": "npx tsx scripts/test-judge.ts",
+    "balance": "npx tsx scripts/balance-report.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
