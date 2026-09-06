@@ -6,9 +6,13 @@
  * `applyTheme()`가 같은 속성을 갱신한다.
  */
 
+import { MAX_NICKNAME_LENGTH } from './gameConfig';
+
 export const SETTINGS_KEY = 'yesno_settings';
 export const SAVES_KEY = 'yesno_saves';
 export const ONBOARDED_KEY = 'yesno_onboarded';
+/** 데일리 리더보드에 쓰는 닉네임 (P4-B). 방 참가 닉네임과는 별개다. */
+export const NICKNAME_KEY = 'yesno_nickname';
 
 export type Theme = 'dark' | 'light';
 
@@ -43,6 +47,23 @@ export function saveSettings(settings: AppSettings): void {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   } catch {
     // 프라이빗 모드 등 저장 불가 — 이번 세션에만 적용된다.
+  }
+}
+
+export function loadNickname(): string {
+  if (typeof window === 'undefined') return '';
+  try {
+    return localStorage.getItem(NICKNAME_KEY) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveNickname(nickname: string): void {
+  try {
+    localStorage.setItem(NICKNAME_KEY, nickname.trim().slice(0, MAX_NICKNAME_LENGTH));
+  } catch {
+    // 저장 불가 — 이번 세션에만 적용된다.
   }
 }
 

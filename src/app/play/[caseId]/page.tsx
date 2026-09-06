@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useSyncExternalStore } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Send, Flag, Eye, Lightbulb, FileText, Lock, Unlock,
-  AlertTriangle, ChevronLeft, X, Trophy, ArrowRight, ChevronDown, ChevronUp, Share2, ImageDown
+  AlertTriangle, ChevronLeft, X, Trophy, ArrowRight, ChevronDown, ChevronUp, Share2, ImageDown,
+  CalendarDays
 } from 'lucide-react';
 import {
   INITIAL_TOKENS, COST_HINT, COST_PREVIEW, COST_WRONG_ANSWER,
@@ -16,6 +17,7 @@ import { rankToken } from '@/lib/theme';
 import { useToast } from '@/components/Toast';
 import { Modal } from '@/components/Modal';
 import { Onboarding, shouldShowOnboarding } from '@/components/Onboarding';
+import { loadNickname } from '@/lib/settings';
 import { FactMark, ShareCardData, shareCardImage, shareResultText } from '@/lib/shareCard';
 
 /** useSyncExternalStore용 — 구독할 외부 저장소가 없다. */
@@ -69,6 +71,8 @@ export default function PlayPage() {
     rank?: string;
     results?: { id: string; status: string; evidence: string }[];
     feedback?: string;
+    /** 오늘의 사건이었다면 서버가 남긴 리더보드 순위 (P4-B). */
+    daily?: { dateKey: string; position: number; total: number; nickname: string; improved: boolean };
   } | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
@@ -185,11 +189,6 @@ export default function PlayPage() {
           revealedKeyFacts: newFacts,
         };
 
-        // Check if tokens depleted
-        if (updated.tokens <= 0) {
-          // Force final attempt
-        }
-
         return updated;
       });
 
@@ -222,6 +221,8 @@ export default function PlayPage() {
           tokens: state.tokens,
           attemptsUsed: state.attemptsUsed,
           questions: state.questions.map((q) => ({ text: q.text, verdict: q.verdict })),
+          // 오늘의 사건이면 서버가 이 이름으로 리더보드에 기록한다 (P4-B).
+          nickname: loadNickname(),
         }),
       });
       const data = await res.json();
@@ -855,6 +856,35 @@ export default function PlayPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+
+            {/* 데일리 리더보드 (P4-B) */}
+            {resultData.daily && (
+              <div
+                className="mb-6 p-4 rounded-xl border flex items-center gap-3"
+                style={{
+                  borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)',
+                  background: 'color-mix(in srgb, var(--accent) 6%, transparent)',
+                }}
+              >
+                <CalendarDays size={20} style={{ color: 'var(--accent)' }} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-bold" style={{ color: 'var(--accent)' }}>
+                    오늘의 사건 {resultData.daily.position}위 / {resultData.daily.total}명
+                  </div>
+                  <div className="text-xs" style={{ color: 'var(--muted)' }}>
+                    {resultData.daily.nickname} · {resultData.daily.dateKey}
+                    {!resultData.daily.improved && ' · 이전 기록이 더 높아 유지됩니다'}
+                  </div>
+                </div>
+                <button
+                  onClick={() => router.push('/daily')}
+                  className="shrink-0 px-3 py-1.5 rounded text-xs border"
+                  style={{ borderColor: 'var(--border)', color: 'var(--fg)', background: 'var(--surface-2)' }}
+                >
+                  리더보드
+                </button>
               </div>
             )}
 

@@ -165,6 +165,35 @@ CREATE INDEX IF NOT EXISTS game_history_finished_idx ON game_history(finished_at
 ALTER TABLE game_history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "No anonymous access" ON game_history FOR ALL USING (false);
 
+-- Daily challenge leaderboard (P4-B)
+-- 기록은 서버(/api/verdict)만 쓴다. 점수를 받는 공개 엔드포인트는 없다.
+CREATE TABLE IF NOT EXISTS daily_leaderboard (
+  id text PRIMARY KEY,
+  -- KST 자정 기준 'YYYY-MM-DD'. 사건 id와 함께 하루를 식별한다
+  -- (후보 목록이 바뀌어 그날의 사건이 달라져도 기록이 섞이지 않게).
+  date_key text NOT NULL,
+  case_id text REFERENCES cases(id) ON DELETE CASCADE,
+  nickname text NOT NULL,
+  score int NOT NULL,
+  rank text NOT NULL,
+  tokens_left int NOT NULL DEFAULT 0,
+  total_questions int NOT NULL DEFAULT 0,
+  accuracy int NOT NULL DEFAULT 0,
+  -- IP 해시. 같은 사람의 재도전을 하나로 묶되 원본 IP는 남기지 않는다.
+  player_key text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- 같은 날·같은 사건·같은 사람은 최고 기록 하나만 남는다.
+CREATE UNIQUE INDEX IF NOT EXISTS daily_leaderboard_player_idx
+  ON daily_leaderboard(date_key, case_id, player_key);
+CREATE INDEX IF NOT EXISTS daily_leaderboard_rank_idx
+  ON daily_leaderboard(date_key, case_id, score DESC);
+
+ALTER TABLE daily_leaderboard ENABLE ROW LEVEL SECURITY;
+-- 조회도 서버 라우트를 거친다 (service role).
+CREATE POLICY "No anonymous access" ON daily_leaderboard FOR ALL USING (false);
+
 -- ============================================
 -- RPC: Atomic token deduction for coop mode
 -- ============================================

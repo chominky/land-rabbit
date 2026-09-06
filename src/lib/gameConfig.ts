@@ -77,6 +77,14 @@ export const ROOM_TTL_HOURS = 24;
 // === Rate Limiting ===
 export const RATE_LIMIT_QUESTIONS_PER_MINUTE = 20;
 export const RATE_LIMIT_ADMIN_LOGIN_PER_MINUTE = 5;
+/** 최종 추리 제출. 한 판에 2번이면 충분해 넉넉히 잡아도 낮다 (P4-B 리더보드 남용 방지). */
+export const RATE_LIMIT_VERDICTS_PER_MINUTE = 6;
+
+// === Daily Challenge / Leaderboard (P4-B) ===
+/** 리더보드에 보여줄 상위 기록 수. */
+export const LEADERBOARD_TOP_N = 20;
+/** 리더보드·방에서 쓰는 닉네임 최대 길이. */
+export const MAX_NICKNAME_LENGTH = 20;
 
 // === Input Validation ===
 export const MAX_QUESTION_LENGTH = 500;

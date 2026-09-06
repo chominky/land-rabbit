@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callClaude, parseAIJson } from '@/lib/ai/claude';
 import { buildVerdictSystemPrompt } from '@/lib/ai/prompts';
+import { kstDateKey } from '@/lib/daily';
+import { getDailyCaseId } from '@/lib/dailyCase';
 import { isFileDb, loadCase, mapSupabaseToCaseData } from '@/lib/fileDb';
 import { saveRecord } from '@/lib/history';
+import { plausibleTokens, submitResult } from '@/lib/leaderboard';
+import { checkRateLimit } from '@/lib/rateLimit';
 import {
   COST_WRONG_ANSWER,
   MAX_FINAL_ATTEMPTS,
   MAX_ANSWER_LENGTH,
+  RATE_LIMIT_VERDICTS_PER_MINUTE,
   WRONG_ANSWER_COOLDOWN_SECONDS,
   calculateScore,
   getRank,
 } from '@/lib/gameConfig';
 import { CaseData, FactResult } from '@/lib/types';
+
+/** 데일리 순위 정보. 오늘의 사건을 클리어했을 때만 붙는다 (P4-B). */
+type DailyResult = {
+  dateKey: string;
+  position: number;
+  total: number;
+  nickname: string;
+  improved: boolean;
+};
 
 type AIVerdictResponse = {
   results: FactResult[];
@@ -22,6 +36,15 @@ type AIVerdictResponse = {
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || 'unknown';
+    const rl = checkRateLimit(`verdict:${ip}`, RATE_LIMIT_VERDICTS_PER_MINUTE);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { caseId, answer, playerId, roomCode } = body;
 
@@ -75,8 +98,19 @@ async function handleSingleVerdict(
   if (!c) {
     return NextResponse.json({ error: 'Case not found' }, { status: 404 });
   }
-  const currentTokens = (body.tokens as number) ?? 0;
   const attemptsUsed = (body.attemptsUsed as number) ?? 0;
+  const questions = ((body.questions || body.previousQuestions || []) as {
+    text: string;
+    verdict: string;
+  }[]).map((q) => ({ text: q.text, verdict: q.verdict }));
+
+  // 단일 플레이는 진행 상황이 클라이언트에 있다. 최소한 "질문 수·오답 수로
+  // 가능한 최대치"를 넘는 토큰은 잘라낸다 — 점수가 그대로 부풀지 않게 (P4-B).
+  const currentTokens = plausibleTokens(
+    (body.tokens as number) ?? 0,
+    questions.length,
+    attemptsUsed
+  );
 
   if (attemptsUsed >= MAX_FINAL_ATTEMPTS) {
     return NextResponse.json(
@@ -134,10 +168,8 @@ async function handleSingleVerdict(
     (attemptsUsed + 1 >= MAX_FINAL_ATTEMPTS || tokensAfterPenalty <= 0);
 
   // Save game record on every final answer submission
+  const ip = request.headers.get('x-forwarded-for') || 'unknown';
   try {
-    const ip = request.headers.get('x-forwarded-for') || 'unknown';
-    const questions = ((body.questions || body.previousQuestions || []) as { text: string; verdict: string }[])
-      .map((q) => ({ text: q.text, verdict: q.verdict }));
     await saveRecord({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       caseId,
@@ -157,6 +189,18 @@ async function handleSingleVerdict(
     console.error('Failed to save game record:', err);
   }
 
+  const daily = aiResult.solved
+    ? await recordDaily({
+        caseId,
+        nickname: body.nickname,
+        tokensLeft: tokensAfterPenalty,
+        totalQuestions: questions.length,
+        attemptsUsed,
+        accuracy: aiResult.accuracy,
+        ip,
+      })
+    : undefined;
+
   return NextResponse.json({
     results: aiResult.results,
     solved: aiResult.solved,
@@ -167,7 +211,52 @@ async function handleSingleVerdict(
     rank: aiResult.solved ? rank : gameOver ? 'D' : undefined,
     truth: aiResult.solved || gameOver ? c.truth : undefined,
     gameOver,
+    daily,
   });
+}
+
+/**
+ * 오늘의 사건을 클리어했으면 리더보드에 남긴다 (P4-B).
+ *
+ * 점수는 여기서, 서버가 계산한 값으로만 기록한다 — 클라이언트가 점수를
+ * 올려 보낼 통로는 없다. 리더보드가 죽어도 채점 응답은 나가야 하므로
+ * 실패는 삼킨다.
+ */
+async function recordDaily(input: {
+  caseId: string;
+  nickname: unknown;
+  tokensLeft: number;
+  totalQuestions: number;
+  attemptsUsed: number;
+  accuracy: number;
+  ip: string;
+}): Promise<DailyResult | undefined> {
+  try {
+    const dateKey = kstDateKey();
+    if ((await getDailyCaseId(dateKey)) !== input.caseId) return undefined;
+
+    const result = await submitResult({
+      dateKey,
+      caseId: input.caseId,
+      nickname: typeof input.nickname === 'string' ? input.nickname : '',
+      reportedTokensLeft: input.tokensLeft,
+      totalQuestions: input.totalQuestions,
+      attemptsUsed: input.attemptsUsed,
+      accuracy: input.accuracy,
+      ip: input.ip,
+    });
+
+    return {
+      dateKey,
+      position: result.position,
+      total: result.total,
+      nickname: result.entry.nickname,
+      improved: result.improved,
+    };
+  } catch (err) {
+    console.error('Failed to record daily leaderboard entry:', err);
+    return undefined;
+  }
 }
 
 async function handleMultiVerdict(

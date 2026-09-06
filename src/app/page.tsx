@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FileText, Users, FolderOpen, Settings, ArrowUp, ArrowDown } from 'lucide-react';
+import { FileText, Users, FolderOpen, Settings, ArrowUp, ArrowDown, CalendarDays } from 'lucide-react';
 import { Modal } from '@/components/Modal';
 
 interface MenuItem {
@@ -91,6 +91,11 @@ export default function HomePage() {
         if (hasSaves) router.push('/cases?continue=1');
       },
       disabled: !hasSaves,
+    },
+    {
+      label: '오늘의 사건',
+      icon: <CalendarDays size={18} />,
+      action: () => router.push('/daily'),
     },
     {
       label: '방 만들기',
